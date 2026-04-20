@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
-import { join } from "path";
+import { v2 as cloudinary } from "cloudinary";
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,23 +17,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const base64 = buffer.toString("base64");
+    const dataURI = `data:${file.type};base64,${base64}`;
 
-    const uploadDir = join(process.cwd(), "public", "uploads");
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(dataURI, {
+      folder: "webnovel",
+      resource_type: "auto",
+    });
 
-    const ext = file.name.split(".").pop();
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const filepath = join(uploadDir, filename);
-
-    await writeFile(filepath, buffer);
-
-    return NextResponse.json({ url: `/uploads/${filename}` });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    return NextResponse.json({ url: result.secure_url });
+  } catch (error: any) {
+    console.error("Upload error:", error);
+    return NextResponse.json(
+      { error: "Upload failed: " + error.message },
+      { status: 500 }
+    );
   }
 }
