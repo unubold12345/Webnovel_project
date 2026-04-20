@@ -3,12 +3,17 @@ import { NextResponse } from "next/server";
 
 // Public page routes that don't require authentication
 const publicPageRoutes = [
+  "/",
   "/auth/login",
   "/auth/register",
   "/auth/forgot-password",
   "/auth/reset-password",
   "/auth/verify-email",
   "/auth/error",
+  "/novels",
+  "/novel",
+  "/ranking",
+  "/search",
 ];
 
 // Public API routes that don't require authentication
@@ -30,7 +35,7 @@ export default auth((req) => {
 
   // Check if the current page route is public
   const isPublicPageRoute = publicPageRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname === route || pathname.startsWith(route + "/")
   );
 
   // Allow access to public page routes regardless of auth status
