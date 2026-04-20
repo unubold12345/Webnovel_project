@@ -197,7 +197,7 @@ export default async function NovelDetailsPage({ params }: PageProps) {
                   >
                     <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
                   </svg>
-                  {novel.totalChapters}
+                  {novel.totalChapters}+
                 </span>
               </div>
             )}
@@ -234,7 +234,7 @@ export default async function NovelDetailsPage({ params }: PageProps) {
                   <span className={styles.progressText}>
                     {isLightNovel
                       ? `${uploadedVolumes}/${novel.totalVolumes}`
-                      : `${uploadedChapters}/${novel.totalChapters}`}
+                      : `${uploadedChapters}/${novel.totalChapters}+`}
                   </span>
                 </div>
               ) : (
