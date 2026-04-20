@@ -1,0 +1,272 @@
+// IMPORTANT: Do NOT run "prisma migrate reset" or "npx prisma db push --force-reset"
+// This will delete all data in the database. Use "npx prisma db push" only for schema changes.
+// To reset would require re-seeding all data which is time consuming.
+
+// 
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @id @default(cuid())
+  username        String            @unique
+  email           String            @unique
+  password        String?
+  emailVerified   Boolean           @default(false)
+  emailVerifyToken String?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  role            String            @default("user")
+  isRestricted    Boolean           @default(false)
+  lastActiveAt    DateTime          @default(now())
+  avatar          String?
+  bio             String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  comments        Comment[]
+  commentLikes    CommentLike[]
+  notifications   Notification[]
+  readingProgress ReadingProgress[]
+  reports         Report[]          @relation("ReportReporter")
+  reviews         Review[]
+  reviewLikes     ReviewLike[]
+  savedNovels     SavedNovel[]
+}
+
+model Webnovel {
+  id                String             @id @default(cuid())
+  title             String
+  slug              String             @unique
+  author            String
+  translator        String?
+  summary           String
+  thumbnail         String
+  novelType         String             @default("webnovel")
+  status            String             @default("ongoing")
+  translationStatus String             @default("ongoing")
+  totalChapters     Int                @default(0)
+  totalVolumes      Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  chapters          Chapter[]
+  volumes           Volume[]
+  comments          Comment[]
+  readingProgress   ReadingProgress[]
+  scheduledChapters ScheduledChapter[]
+  reviews           Review[]
+  savedNovels       SavedNovel[]
+}
+
+model Volume {
+  id             String          @id @default(cuid())
+  novelId        String
+  volumeNumber   Int
+  title          String
+  thumbnail      String?
+  content        String          @default("")
+  contentImages  String          @default("[]")
+  images         String          @default("[]")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  novel          Webnovel        @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  comments       Comment[]
+  chapters       VolumeChapter[]
+
+  @@unique([novelId, volumeNumber])
+}
+
+model VolumeChapter {
+  id             String            @id @default(cuid())
+  volumeId       String
+  chapterNumber  Int
+  title          String
+  content        String
+  contentImages  String            @default("[]")
+  images         String            @default("[]")
+  viewCount      Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  volume         Volume            @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+  readingProgress ReadingProgress[]
+  reports        Report[]
+
+  @@unique([volumeId, chapterNumber])
+}
+
+model Chapter {
+  id              String            @id @default(cuid())
+  novelId         String
+  chapterNumber   Int
+  title           String
+  content         String
+  originalContent String?
+  viewCount       Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  novel           Webnovel          @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  comments        Comment[]
+  readingProgress ReadingProgress[]
+  reports         Report[]
+
+  @@unique([novelId, chapterNumber])
+}
+
+model ScheduledChapter {
+  id            String   @id @default(cuid())
+  novelId       String
+  chapterNumber Int
+  title         String
+  scheduledFor  DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  novel         Webnovel @relation(fields: [novelId], references: [id], onDelete: Cascade)
+
+  @@unique([novelId, chapterNumber])
+}
+
+model Comment {
+  id            String        @id @default(cuid())
+  userId        String
+  novelId       String?
+  chapterId     String?
+  volumeId      String?
+  parentId      String?
+  content       String
+  isSpoiler     Boolean       @default(false)
+  isPinned      Boolean       @default(false)
+  likeCount     Int           @default(0)
+  dislikeCount  Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+  deletedReason String?
+  deletedByOwner Boolean      @default(false)
+  recoverableUntil DateTime?
+  parent        Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[]     @relation("CommentReplies")
+  chapter       Chapter?      @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  novel         Webnovel?     @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  volume        Volume?       @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes         CommentLike[]
+  reports       Report[]
+}
+
+model Report {
+  id              String          @id @default(cuid())
+  reporterId      String
+  reason          String
+  category        String
+  status          String          @default("pending")
+  resolvedAt      DateTime?
+  createdAt       DateTime        @default(now())
+  commentId       String?
+  chapterId       String?
+  volumeChapterId String?
+  reviewId        String?
+  chapter         Chapter?        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  volumeChapter   VolumeChapter?  @relation(fields: [volumeChapterId], references: [id], onDelete: Cascade)
+  comment         Comment?        @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  review          Review?         @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reporter        User            @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([commentId])
+  @@index([chapterId])
+  @@index([volumeChapterId])
+  @@index([reviewId])
+  @@index([status])
+}
+
+model CommentLike {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  type      String
+  createdAt DateTime @default(now())
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
+model ReadingProgress {
+  id              String          @id @default(cuid())
+  userId          String
+  novelId         String
+  chapterId       String?
+  volumeChapterId String?
+  chapterNumber   Int
+  volumeId        String?
+  isVolumeChapter Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  chapter         Chapter?        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  volumeChapter   VolumeChapter?  @relation(fields: [volumeChapterId], references: [id], onDelete: Cascade)
+  novel           Webnovel        @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, novelId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id           String       @id @default(cuid())
+  userId       String
+  novelId      String
+  rating       Int
+  content      String
+  isSpoiler    Boolean      @default(false)
+  likeCount    Int          @default(0)
+  dislikeCount Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  novel        Webnovel     @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  likes        ReviewLike[]
+  reports      Report[]
+
+  @@unique([userId, novelId])
+}
+
+model ReviewLike {
+  id        String   @id @default(cuid())
+  userId    String
+  reviewId  String
+  type      String
+  createdAt DateTime @default(now())
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reviewId])
+}
+
+model SavedNovel {
+  id            String   @id @default(cuid())
+  userId        String
+  novelId       String
+  readingStatus String   @default("plan_to_read")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  novel         Webnovel @relation(fields: [novelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, novelId])
+  @@index([userId])
+  @@index([novelId])
+}

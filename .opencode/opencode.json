@@ -1,0 +1,11 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "oh-my-opencode-slim",
+    "@tarquinen/opencode-dcp",
+    "opencode-supermemory",
+    "opencode-agent-skills",
+    "@knikolov/opencode-plugin-simple-memory",
+    "opencode-tokenscope"
+  ]
+}

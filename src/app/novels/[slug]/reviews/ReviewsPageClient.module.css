@@ -1,0 +1,114 @@
+.statsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ratingSummary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.totalCount {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stars {
+  display: flex;
+  gap: 0.125rem;
+}
+
+.averageRating {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.writeButton {
+  padding: 0.75rem 1.5rem;
+  background: #a855f7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.writeButton:hover {
+  background: #9333ea;
+}
+
+.sortTabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.sortTab {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sortTab:hover {
+  border-color: #a855f7;
+  color: var(--text);
+}
+
+.sortTab.active {
+  background: #a855f7;
+  border-color: #a855f7;
+  color: white;
+}
+
+.reviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.empty p {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 640px) {
+  .statsRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .totalCount {
+    font-size: 1.25rem;
+  }
+  
+  .averageRating {
+    font-size: 1rem;
+  }
+  
+  .sortTabs {
+    flex-wrap: wrap;
+  }
+}

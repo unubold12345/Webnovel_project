@@ -1,0 +1,178 @@
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.breadcrumbLink {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumbLink:hover {
+  color: var(--primary);
+}
+
+.breadcrumbSeparator {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.breadcrumbCurrent {
+  color: var(--text);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navigation {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.navLeft {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.navCenter {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.navRight {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.thumbnail {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.thumbnail img {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.content {
+  font-size: 1.0625rem;
+  line-height: 1.9;
+  color: var(--text);
+  margin-bottom: 3rem;
+}
+
+.content p {
+  margin-bottom: 1.5em;
+  white-space: pre-line;
+}
+
+.content p:last-child {
+  margin-bottom: 0;
+}
+
+.inlineImageWrapper {
+  margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.inlineImageWrapper img {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.gallerySection {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.galleryTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.galleryImageWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.galleryImageWrapper img {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .navigation {
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .navCenter {
+    gap: 0.5rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .content {
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+
+  .thumbnail img {
+    max-width: 200px;
+    height: auto;
+  }
+}

@@ -1,0 +1,209 @@
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.breadcrumbLink {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumbLink:hover {
+  color: var(--primary);
+}
+
+.breadcrumbSeparator {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.breadcrumbCurrent {
+  color: var(--text);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navigation {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.navLeft {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.navCenter {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.navRight {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.navButton,
+.navButtonDisabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1rem;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  transition: background 0.2s, opacity 0.2s;
+  border: 1px solid var(--border);
+  text-decoration: none;
+}
+
+.navButton:hover {
+  background: var(--surface-hover);
+}
+
+.navButtonDisabled {
+  background: transparent;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.volumeTitle {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.content {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.9;
+  letter-spacing: normal;
+  color: var(--text);
+  margin-bottom: 3rem;
+}
+
+.content p {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  font-weight: inherit;
+  margin-bottom: 1.5em;
+  white-space: pre-line;
+}
+
+.content p:last-child {
+  margin-bottom: 0;
+}
+
+.inlineImageWrapper {
+  margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.inlineImageWrapper img {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.gallerySection {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.galleryTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.galleryImageWrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.galleryImageWrapper img {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .navigation {
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .navCenter {
+    gap: 0.5rem;
+  }
+
+  .navButton,
+  .navButtonDisabled {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .content {
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+}
