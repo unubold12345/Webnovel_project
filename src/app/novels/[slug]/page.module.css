@@ -382,6 +382,7 @@
 .summary p {
   line-height: 1.7;
   color: var(--text-secondary);
+  white-space: pre-wrap;
 }
 
 .chapterList {
