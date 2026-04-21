@@ -15,11 +15,14 @@ export async function POST(
     const { novelId } = await params;
     const data = await req.json();
 
+    // Convert chapterNumber to integer
+    const chapterNumber = parseInt(data.chapterNumber, 10);
+
     const existingChapter = await db.chapter.findUnique({
       where: {
         novelId_chapterNumber: {
           novelId,
-          chapterNumber: data.chapterNumber,
+          chapterNumber,
         },
       },
     });
@@ -37,7 +40,7 @@ export async function POST(
         where: {
           novelId_chapterNumber: {
             novelId,
-            chapterNumber: data.chapterNumber,
+            chapterNumber,
           },
         },
       });
@@ -49,7 +52,7 @@ export async function POST(
     const chapter = await db.chapter.create({
       data: {
         novelId,
-        chapterNumber: data.chapterNumber,
+        chapterNumber,
         title: data.title,
         content: data.content,
       },

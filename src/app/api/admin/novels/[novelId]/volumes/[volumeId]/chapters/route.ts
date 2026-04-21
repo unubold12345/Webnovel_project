@@ -39,12 +39,15 @@ export async function POST(
     const { novelId, volumeId } = await params;
     const data = await req.json();
 
+    // Convert chapterNumber to integer
+    const chapterNumber = parseInt(data.chapterNumber, 10);
+
     // Check if chapter number already exists for this volume
     const existingChapter = await db.volumeChapter.findUnique({
       where: {
         volumeId_chapterNumber: {
           volumeId,
-          chapterNumber: data.chapterNumber,
+          chapterNumber,
         },
       },
     });
@@ -60,7 +63,7 @@ export async function POST(
     const chapter = await db.volumeChapter.create({
       data: {
         volumeId,
-        chapterNumber: data.chapterNumber,
+        chapterNumber,
         title: data.title,
         content: data.content,
         contentImages: JSON.stringify(data.contentImages || []),
