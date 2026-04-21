@@ -83,7 +83,7 @@ model Volume {
 model VolumeChapter {
   id             String            @id @default(cuid())
   volumeId       String
-  chapterNumber  Int
+  chapterNumber  Float
   title          String
   content        String
   contentImages  String            @default("[]")

@@ -39,8 +39,8 @@ export async function POST(
     const { novelId, volumeId } = await params;
     const data = await req.json();
 
-    // Convert chapterNumber to integer
-    const chapterNumber = parseInt(data.chapterNumber, 10);
+    // Convert chapterNumber to float (supports decimals like 3.1, 3.2)
+    const chapterNumber = parseFloat(data.chapterNumber);
 
     // Check if chapter number already exists for this volume
     const existingChapter = await db.volumeChapter.findUnique({

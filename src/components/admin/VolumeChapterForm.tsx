@@ -30,7 +30,7 @@ interface VolumeChapterFormProps {
 export default function VolumeChapterForm({
   novelId,
   volumeId,
-  nextChapterNumber = 1,
+  nextChapterNumber = 0,
   basePath = "/admin",
   initialData,
 }: VolumeChapterFormProps) {
@@ -198,7 +198,8 @@ export default function VolumeChapterForm({
             onChange={handleChange}
             className={styles.input}
             required
-            min={1}
+            min={0}
+            step="0.1"
           />
         </div>
 
