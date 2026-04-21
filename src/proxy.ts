@@ -3,17 +3,12 @@ import { NextResponse } from "next/server";
 
 // Public page routes that don't require authentication
 const publicPageRoutes = [
-  "/",
   "/auth/login",
   "/auth/register",
   "/auth/forgot-password",
   "/auth/reset-password",
   "/auth/verify-email",
   "/auth/error",
-  "/novels",
-  "/novel",
-  "/ranking",
-  "/search",
 ];
 
 // Public API routes that don't require authentication
