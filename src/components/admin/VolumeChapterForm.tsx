@@ -117,10 +117,7 @@ export default function VolumeChapterForm({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const value =
-      e.target.name === "chapterNumber"
-        ? Number(e.target.value)
-        : e.target.value;
+    const value = e.target.value;
     setFormData({ ...formData, [e.target.name]: value });
   };
 
@@ -158,11 +155,17 @@ export default function VolumeChapterForm({
 
     const method = initialData ? "PATCH" : "POST";
 
+    // Prepare data with chapterNumber as float
+    const submitData = {
+      ...formData,
+      chapterNumber: parseFloat(formData.chapterNumber as any),
+    };
+
     try {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       if (res.ok) {
