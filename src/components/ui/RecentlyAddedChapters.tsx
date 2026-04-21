@@ -31,12 +31,15 @@ function formatTimeAgo(date: Date): string {
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
 
-  if (diffMins < 1) return "just now";
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-  if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
-  return new Date(date).toLocaleDateString();
+  if (diffMins < 1) return "саяхан";
+  if (diffMins < 60) return `${diffMins} минутын өмнө`;
+  if (diffHours < 24) return `${diffHours} цагийн өмнө`;
+  if (diffDays < 7) return `${diffDays} хоногийн өмнө`;
+  if (diffWeeks < 4) return `${diffWeeks} долоо хоногийн өмнө`;
+  return `${diffMonths} сарын өмнө`;
 }
 
 export default function RecentlyAddedChapters({ chapters }: RecentlyAddedChaptersProps) {
