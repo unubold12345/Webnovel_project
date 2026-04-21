@@ -192,14 +192,14 @@ export default function VolumeChapterForm({
         <div className={styles.field}>
           <label className={styles.label}>Бүлгийн дугаар</label>
           <input
-            type="number"
+            type="text"
             name="chapterNumber"
             value={formData.chapterNumber}
             onChange={handleChange}
             className={styles.input}
             required
-            min={0}
-            step="0.1"
+            pattern="[0-9]+(\.[0-9]+)?"
+            placeholder="Жишээ: 3, 3.1, 4.2"
           />
         </div>
 
