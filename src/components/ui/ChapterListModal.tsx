@@ -24,9 +24,7 @@ export default function ChapterListModal({ chapters, currentChapter, novelSlug, 
 
   const currentChapterData = chapters.find(c => c.chapterNumber === currentChapter);
   const buttonText = currentChapterData 
-    ? volumeNumber 
-      ? `${currentChapterData.chapterNumber} / ${chapters.length}`
-      : `${currentChapterData.chapterNumber}-р бүлэг - ${currentChapterData.title}`
+    ? `Бүлэг ${currentChapterData.chapterNumber}${currentChapterData.title ? ` - ${currentChapterData.title}` : ''}`
     : "Бүлэгийн жагсаалт";
 
   useEffect(() => {
