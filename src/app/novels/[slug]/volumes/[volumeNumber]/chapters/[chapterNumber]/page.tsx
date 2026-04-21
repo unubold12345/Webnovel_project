@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import CommentSection from "@/components/ui/CommentSection";
 import ChapterListModal from "@/components/ui/ChapterListModal";
@@ -189,13 +188,11 @@ export default async function VolumeChapterReadPage({ params }: PageProps) {
             if (part.type === "image") {
               return (
                 <div key={`img-${index}`} className={styles.inlineImageWrapper}>
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={part.image.url}
                     alt={`Illustration ${index + 1}`}
-                    width={700}
-                    height={1000}
-                    style={{ width: "100%", height: "auto" }}
-                    priority={index < 2}
+                    style={{ width: "100%", height: "auto", maxWidth: "100%" }}
                   />
                 </div>
               );
@@ -219,12 +216,11 @@ export default async function VolumeChapterReadPage({ params }: PageProps) {
           <div className={styles.gallery}>
             {galleryImages.map((img, index) => (
               <div key={index} className={styles.galleryImageWrapper}>
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={img}
                   alt={`Gallery image ${index + 1}`}
-                  width={700}
-                  height={1000}
-                  style={{ width: "100%", height: "auto" }}
+                  style={{ width: "100%", height: "auto", maxWidth: "100%" }}
                 />
               </div>
             ))}
