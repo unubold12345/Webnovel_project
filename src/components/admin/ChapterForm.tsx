@@ -87,14 +87,14 @@ export default function ChapterForm({ novelId, nextChapterNumber = 1, initialDat
           />
         </div>
         <div className={styles.field}>
-          <label className={styles.label}>Гарчиг</label>
+          <label className={styles.label}>Гарчиг (заавал биш)</label>
           <input
             type="text"
             name="title"
             value={formData.title}
             onChange={handleChange}
             className={styles.input}
-            required
+            placeholder="Бүлгийн гарчиг (хоосон бол дугаар ашиглана)"
           />
         </div>
         <div className={styles.row}>
