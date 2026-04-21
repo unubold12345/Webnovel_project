@@ -33,7 +33,12 @@ export default auth((req) => {
     pathname === route || pathname.startsWith(route + "/")
   );
 
-  // Allow access to public page routes regardless of auth status
+  // Redirect logged-in users away from auth pages to home
+  if (isPublicPageRoute && isLoggedIn) {
+    return NextResponse.redirect(new URL("/", nextUrl));
+  }
+
+  // Allow access to public page routes for non-logged-in users
   if (isPublicPageRoute) {
     return NextResponse.next();
   }
