@@ -35,7 +35,7 @@ export default async function NewVolumeChapterPage({ params }: NewVolumeChapterP
   }
 
   const lastChapter = volume.chapters[0];
-  const nextChapterNumber = lastChapter ? lastChapter.chapterNumber + 1 : 1;
+  const nextChapterNumber = lastChapter ? lastChapter.chapterNumber + 1 : 0;
 
   return (
     <div className={styles.container}>

@@ -26,7 +26,7 @@ export default async function NewChapterPage({
   }
 
   const lastChapter = novel.chapters[0];
-  const nextChapterNumber = lastChapter ? lastChapter.chapterNumber + 1 : 1;
+  const nextChapterNumber = lastChapter ? lastChapter.chapterNumber + 1 : 0;
 
   return (
     <div>
