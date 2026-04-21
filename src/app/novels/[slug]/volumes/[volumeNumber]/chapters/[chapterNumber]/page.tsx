@@ -61,7 +61,7 @@ function parseContent(content: string, contentImages: ContentImage[]) {
 export default async function VolumeChapterReadPage({ params }: PageProps) {
   const { slug, volumeNumber, chapterNumber } = await params;
   const volNum = parseInt(volumeNumber);
-  const chapNum = parseInt(chapterNumber);
+  const chapNum = parseFloat(chapterNumber);
 
   const novel = await db.webnovel.findUnique({
     where: { slug },
