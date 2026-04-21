@@ -54,8 +54,8 @@ export default function LoginForm() {
       }
       setLoading(false);
     } else {
-      router.push("/");
-      router.refresh();
+      setLoading(false);
+      window.location.href = "/";
     }
   };
 
