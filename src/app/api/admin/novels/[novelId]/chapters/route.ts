@@ -45,25 +45,15 @@ export async function POST(
       // Ignore if scheduled chapter doesn't exist
     }
 
-    // Create the chapter and update totalChapters in a transaction
-    const [chapter] = await db.$transaction([
-      db.chapter.create({
-        data: {
-          novelId,
-          chapterNumber: data.chapterNumber,
-          title: data.title,
-          content: data.content,
-        },
-      }),
-      db.webnovel.update({
-        where: { id: novelId },
-        data: {
-          totalChapters: {
-            increment: 1,
-          },
-        },
-      }),
-    ]);
+    // Create the chapter
+    const chapter = await db.chapter.create({
+      data: {
+        novelId,
+        chapterNumber: data.chapterNumber,
+        title: data.title,
+        content: data.content,
+      },
+    });
 
     return NextResponse.json(chapter);
   } catch (error) {

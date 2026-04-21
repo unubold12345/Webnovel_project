@@ -56,27 +56,17 @@ export async function POST(
       );
     }
 
-    // Create the chapter and update totalChapters in a transaction
-    const [chapter] = await db.$transaction([
-      db.volumeChapter.create({
-        data: {
-          volumeId,
-          chapterNumber: data.chapterNumber,
-          title: data.title,
-          content: data.content,
-          contentImages: JSON.stringify(data.contentImages || []),
-          images: JSON.stringify(data.images || []),
-        },
-      }),
-      db.webnovel.update({
-        where: { id: novelId },
-        data: {
-          totalChapters: {
-            increment: 1,
-          },
-        },
-      }),
-    ]);
+    // Create the chapter
+    const chapter = await db.volumeChapter.create({
+      data: {
+        volumeId,
+        chapterNumber: data.chapterNumber,
+        title: data.title,
+        content: data.content,
+        contentImages: JSON.stringify(data.contentImages || []),
+        images: JSON.stringify(data.images || []),
+      },
+    });
 
     return NextResponse.json(chapter);
   } catch (error) {
