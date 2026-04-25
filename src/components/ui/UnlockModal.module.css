@@ -1,0 +1,157 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.modal {
+  background: var(--background);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.closeButton:hover {
+  background: var(--surface);
+}
+
+.body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.lockIcon {
+  color: var(--warning);
+  opacity: 0.9;
+}
+
+.chapterTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.costBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border-radius: 9999px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.error {
+  color: #ef4444;
+  font-size: 0.875rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.cancelButton,
+.unlockButton {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+}
+
+.cancelButton {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.unlockButton {
+  background: var(--primary);
+  color: white;
+}
+
+.unlockButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.cancelButton:disabled,
+.unlockButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.success p {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+}

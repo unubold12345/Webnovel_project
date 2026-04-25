@@ -72,6 +72,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           isRestricted: user.isRestricted,
           emailVerified: user.emailVerified,
+          coins: user.coins,
+          subscriptionPlan: user.subscriptionPlan,
+          subscriptionExpiresAt: user.subscriptionExpiresAt?.toISOString() ?? null,
+          acceptedTermsAt: user.acceptedTermsAt?.toISOString() ?? null,
         };
       },
     }),
@@ -106,6 +110,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         (user as any).isRestricted = existingUser.isRestricted;
         (user as any).emailVerified = !!existingUser.emailVerified;
         (user as any).needsPassword = !existingUser.password;
+        (user as any).coins = existingUser.coins;
+        (user as any).subscriptionPlan = existingUser.subscriptionPlan;
+        (user as any).subscriptionExpiresAt = existingUser.subscriptionExpiresAt?.toISOString() ?? null;
+        (user as any).acceptedTermsAt = existingUser.acceptedTermsAt?.toISOString() ?? null;
       }
 
       return true;
@@ -116,14 +124,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.isRestricted = user.isRestricted;
         (token as any).emailVerified = (user as any).emailVerified ?? false;
+        (token as any).coins = (user as any).coins ?? 0;
+        (token as any).subscriptionPlan = (user as any).subscriptionPlan ?? null;
+        (token as any).subscriptionExpiresAt = (user as any).subscriptionExpiresAt ?? null;
       }
       // Check if user needs to set password on every token refresh
       if (token.id) {
         const dbUser = await db.user.findUnique({
           where: { id: token.id as string },
-          select: { password: true },
+          select: { password: true, coins: true, subscriptionPlan: true, subscriptionExpiresAt: true, acceptedTermsAt: true },
         });
         (token as any).needsPassword = !dbUser?.password;
+        (token as any).coins = dbUser?.coins ?? 0;
+        (token as any).subscriptionPlan = dbUser?.subscriptionPlan ?? null;
+        (token as any).subscriptionExpiresAt = dbUser?.subscriptionExpiresAt?.toISOString() ?? null;
+        (token as any).acceptedTermsAt = dbUser?.acceptedTermsAt?.toISOString() ?? null;
       }
       // Update lastActiveAt on each sign in
       if (trigger === "signIn" && token.id) {
@@ -141,6 +156,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.isRestricted = !!token.isRestricted;
         (session.user as any).emailVerified = !!(token as any).emailVerified;
         (session.user as any).needsPassword = !!(token as any).needsPassword;
+        (session.user as any).coins = (token as any).coins ?? 0;
+        (session.user as any).subscriptionPlan = (token as any).subscriptionPlan ?? null;
+        (session.user as any).subscriptionExpiresAt = (token as any).subscriptionExpiresAt ?? null;
+        (session.user as any).acceptedTermsAt = (token as any).acceptedTermsAt ?? null;
       }
       return session;
     },

@@ -120,74 +120,120 @@ export default function VolumeForm({
   return (
     <>
       <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.field}>
-          <label className={styles.label}>Ботьийн дугаар</label>
-          <input
-            type="number"
-            name="volumeNumber"
-            value={formData.volumeNumber}
-            onChange={handleChange}
-            className={styles.input}
-            required
-            min={1}
-          />
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label}>Гарчиг</label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            className={styles.input}
-            required
-          />
+        {/* Basic Info */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionNumber}>1</span>
+            <h3 className={styles.sectionTitle}>Ерөнхий мэдээлэл</h3>
+          </div>
+          <div className={styles.grid2}>
+            <div className={styles.field}>
+              <label className={styles.label}>Ботьийн дугаар</label>
+              <input
+                type="number"
+                name="volumeNumber"
+                value={formData.volumeNumber}
+                onChange={handleChange}
+                className={styles.input}
+                required
+                min={1}
+              />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Гарчиг</label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="Ботьийн гарчиг"
+                required
+              />
+            </div>
+          </div>
         </div>
 
         {/* Thumbnail Upload */}
-        <div className={styles.field}>
-          <label className={styles.label}>Нүүр зураг (Thumbnail)</label>
-          <input
-            type="file"
-            onChange={handleThumbnailUpload}
-            accept="image/*"
-            className={styles.fileInput}
-            disabled={uploading}
-          />
-          {uploading && <p className={styles.uploading}>Оруулж байна...</p>}
-          {formData.thumbnail && (
-            <div className={styles.thumbnailPreview}>
-              <div className={styles.imageItem}>
-                <Image
-                  src={formData.thumbnail}
-                  alt="Thumbnail"
-                  width={200}
-                  height={280}
-                  style={{ objectFit: "contain" }}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionNumber}>2</span>
+            <h3 className={styles.sectionTitle}>Нүүр зураг</h3>
+          </div>
+          <div className={styles.field}>
+            <div className={styles.uploadRow}>
+              <div
+                className={`${styles.uploadZone} ${formData.thumbnail ? styles.uploadZoneHasImage : ""}`}
+                onClick={() => document.getElementById("vol-thumb")?.click()}
+                role="button"
+                tabIndex={0}
+              >
+                <input
+                  id="vol-thumb"
+                  type="file"
+                  onChange={handleThumbnailUpload}
+                  accept="image/*"
+                  className={styles.fileInput}
+                  disabled={uploading}
                 />
+                {formData.thumbnail ? (
+                  <div className={styles.preview}>
+                    <Image
+                      src={formData.thumbnail}
+                      alt="Thumbnail"
+                      width={220}
+                      height={310}
+                      style={{ objectFit: "cover" }}
+                    />
+                    <div className={styles.previewOverlay}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      <span>Зураг солих</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.uploadPlaceholder}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span className={styles.uploadText}>Зураг оруулах</span>
+                    <span className={styles.uploadHint}>Эсвэл энд дарна уу</span>
+                  </div>
+                )}
+              </div>
+              {formData.thumbnail && (
                 <button
                   type="button"
                   onClick={handleRemoveThumbnail}
-                  className={styles.removeBtn}
-                  title="Remove thumbnail"
+                  className={styles.removeThumbBtn}
+                  title="Зураг устгах"
                 >
-                  ✕
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  Зураг устгах
                 </button>
-              </div>
+              )}
             </div>
-          )}
+            {uploading && <p className={styles.uploadingText}>Оруулж байна...</p>}
+          </div>
         </div>
 
         <div className={styles.actions}>
           <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? "Хадгалж байна..." : initialData ? "Шинэчлэх" : "Хадгалах"}
+            {loading ? (
+              <>
+                <span className={styles.spinner} />
+                Хадгалж байна...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                {initialData ? "Шинэчлэх" : "Хадгалах"}
+              </>
+            )}
           </button>
           <button
             type="button"
             onClick={() => router.push(`${basePath}/novels/${novelId}/volumes`)}
             className={styles.cancelButton}
           >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             Болих
           </button>
         </div>

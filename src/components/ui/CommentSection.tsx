@@ -81,6 +81,7 @@ export default function CommentSection({ novelId, chapterId, volumeId }: Comment
   const [totalCount, setTotalCount] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [publisherId, setPublisherId] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ show: boolean; commentId: string | null; isSoftDeleted?: boolean; hardDelete?: boolean; isOwnerDelete?: boolean }>({ show: false, commentId: null });
   const [deleteReason, setDeleteReason] = useState("");
   const [reportModal, setReportModal] = useState<{ show: boolean; commentId: string | null; ownerId?: string | null }>({ show: false, commentId: null, ownerId: null });
@@ -228,6 +229,7 @@ export default function CommentSection({ novelId, chapterId, volumeId }: Comment
       setCurrentPage(data.currentPage);
       setTotalCount(data.totalCount || 0);
       setIsAdmin(data.isAdmin || false);
+      setPublisherId(data.publisherId || null);
     }
     setLoading(false);
     setLoadingMore(false);
@@ -537,6 +539,9 @@ export default function CommentSection({ novelId, chapterId, volumeId }: Comment
                     {comment.user.role === "moderator" && (
                       <span className={styles.modBadge}>Зохицуулагч</span>
                     )}
+                    {publisherId && comment.user.id === publisherId && comment.user.role === "user" && (
+                      <span className={styles.authorBadge}>Зохиолч</span>
+                    )}
                     {comment.isPinned && (
                       <span className={styles.pinnedBadge} title="Тогтоосон">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -785,6 +790,9 @@ export default function CommentSection({ novelId, chapterId, volumeId }: Comment
                                 {reply.user.role === "moderator" && (
                                   <span className={styles.modBadge}>Mod</span>
                                 )}
+                                {publisherId && reply.user.id === publisherId && reply.user.role === "user" && (
+                                  <span className={styles.authorBadge}>Зохиолч</span>
+                                )}
                                 {reply.updatedAt > reply.createdAt && (
                                   <span className={styles.editedBadge}>Edited</span>
                                 )}
@@ -1024,6 +1032,9 @@ export default function CommentSection({ novelId, chapterId, volumeId }: Comment
                                 )}
                                 {reply.user.role === "moderator" && (
                                   <span className={styles.modBadge}>Mod</span>
+                                )}
+                                {publisherId && reply.user.id === publisherId && reply.user.role === "user" && (
+                                  <span className={styles.authorBadge}>Зохиолч</span>
                                 )}
                                 {reply.updatedAt > reply.createdAt && (
                                   <span className={styles.editedBadge}>Edited</span>

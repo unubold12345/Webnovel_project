@@ -94,6 +94,26 @@
   margin-bottom: 1rem;
 }
 
+.genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.genreBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  width: fit-content;
+}
+
 .novelTypeBadge {
   display: inline-flex;
   align-items: center;
@@ -424,6 +444,16 @@
   background: var(--surface-hover);
 }
 
+.lockedChapterItem {
+  opacity: 0.85;
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.lockedChapterItem:hover {
+  background: rgba(245, 158, 11, 0.1);
+}
+
 /* Volume Grid Styles */
 .volumeGrid {
   display: grid;
@@ -724,5 +754,40 @@
 }
 
 .readFirstButton:hover {
+  background: var(--primary-hover);
+}
+
+.volumeUnlockBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.volumeUnlockBanner span {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+.volumeUnlockButton {
+  padding: 0.5rem 1rem;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.volumeUnlockButton:hover {
   background: var(--primary-hover);
 }

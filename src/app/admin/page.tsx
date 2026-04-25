@@ -2,20 +2,68 @@ import { db } from "@/lib/db";
 import { getNovelViewCounts } from "@/lib/views";
 import styles from "./page.module.css";
 
-// Force dynamic rendering - don't try to fetch data at build time
 export const dynamic = "force-dynamic";
 
 const getDateRange = (days: number) => {
   const date = new Date();
   date.setDate(date.getDate() - days);
+  date.setHours(0, 0, 0, 0);
   return date;
 };
+
+const formatDateMn = (date: Date) =>
+  date.toLocaleDateString("mn-MN", { month: "short", day: "numeric" });
+
+const formatDateMnFull = (date: Date) =>
+  date.toLocaleDateString("mn-MN", { month: "short", day: "numeric", weekday: "short" });
+
+function getDailyData<T extends { createdAt: Date }>(
+  items: T[],
+  days: number,
+  labelFn: (date: Date) => string = formatDateMn
+) {
+  const result: { label: string; date: Date; count: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = getDateRange(i);
+    const next = new Date(d);
+    next.setDate(next.getDate() + 1);
+    const count = items.filter((item) => {
+      const c = new Date(item.createdAt);
+      return c >= d && c < next;
+    }).length;
+    result.push({ label: labelFn(d), date: d, count });
+  }
+  return result;
+}
+
+function getDailySum<T extends { createdAt: Date; amount: number }>(
+  items: T[],
+  days: number,
+  labelFn: (date: Date) => string = formatDateMn
+) {
+  const result: { label: string; date: Date; total: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = getDateRange(i);
+    const next = new Date(d);
+    next.setDate(next.getDate() + 1);
+    const total = items
+      .filter((item) => {
+        const c = new Date(item.createdAt);
+        return c >= d && c < next;
+      })
+      .reduce((sum, item) => sum + Math.abs(item.amount), 0);
+    result.push({ label: labelFn(d), date: d, total });
+  }
+  return result;
+}
 
 export default async function AdminDashboard() {
   const today = getDateRange(0);
   const lastWeek = getDateRange(7);
   const lastMonth = getDateRange(30);
+  const twoMonthsAgo = getDateRange(60);
 
+  // ── Basic counts ──
   const [
     novelCount,
     chapterCount,
@@ -76,14 +124,12 @@ export default async function AdminDashboard() {
     reportStatusGroups,
     chapterViewsAgg,
     volumeChapterViewsAgg,
-    volumes,
   ] = await Promise.all([
     db.user.groupBy({ by: ["role"], _count: true }),
     db.webnovel.groupBy({ by: ["status"], _count: true }),
     db.report.groupBy({ by: ["status"], _count: true }),
     db.chapter.aggregate({ _sum: { viewCount: true } }),
     db.volumeChapter.aggregate({ _sum: { viewCount: true } }),
-    db.volume.findMany({ select: { id: true, novelId: true } }),
   ]);
 
   const totalViews = (chapterViewsAgg._sum.viewCount || 0) + (volumeChapterViewsAgg._sum.viewCount || 0);
@@ -104,18 +150,47 @@ export default async function AdminDashboard() {
   const reportMap = new Map(reportStatusGroups.map((g) => [g.status, g._count]));
   const pendingReports = reportMap.get("pending") || 0;
   const resolvedReports = reportMap.get("resolved") || 0;
-
   const reportsToday = await db.report.count({ where: { createdAt: { gte: today } } });
-
   const restrictedUsers = await db.user.count({ where: { isRestricted: true } });
 
+  // ── Advanced Analytics Data ──
   const [
-    viewCounts,
+    allUsersRecent,
+    allChaptersRecent,
+    allCommentsRecent,
+    coinHistoryRecent,
+    coinHistoryAll,
+    subscriptionHistoryRecent,
     novelsForStats,
     recentUsers,
     recentComments,
+    viewCounts,
+    unlockedChaptersRecent,
+    unlockedVolumesRecent,
   ] = await Promise.all([
-    getNovelViewCounts(),
+    db.user.findMany({
+      where: { createdAt: { gte: twoMonthsAgo } },
+      select: { id: true, createdAt: true },
+    }),
+    db.chapter.findMany({
+      where: { createdAt: { gte: twoMonthsAgo } },
+      select: { id: true, createdAt: true },
+    }),
+    db.comment.findMany({
+      where: { createdAt: { gte: twoMonthsAgo } },
+      select: { id: true, createdAt: true },
+    }),
+    db.coinHistory.findMany({
+      where: { createdAt: { gte: lastMonth } },
+      select: { id: true, amount: true, type: true, createdAt: true, novelId: true },
+    }),
+    db.coinHistory.findMany({
+      select: { id: true, amount: true, type: true, createdAt: true, novelId: true },
+    }),
+    db.subscriptionHistory.findMany({
+      where: { createdAt: { gte: lastMonth } },
+      select: { id: true, plan: true, createdAt: true },
+    }),
     db.webnovel.findMany({
       select: {
         id: true,
@@ -134,22 +209,100 @@ export default async function AdminDashboard() {
       orderBy: { createdAt: "desc" },
       select: { id: true, content: true, createdAt: true, user: { select: { username: true } } },
     }),
+    getNovelViewCounts(),
+    db.unlockedChapter.findMany({
+      where: { createdAt: { gte: lastMonth } },
+      select: { id: true, createdAt: true },
+    }),
+    db.unlockedVolume.findMany({
+      where: { createdAt: { gte: lastMonth } },
+      select: { id: true, createdAt: true },
+    }),
   ]);
 
+  // ── Time-series charts ──
+  const userGrowthDaily = getDailyData(allUsersRecent, 30);
+  const chapterGrowthDaily = getDailyData(allChaptersRecent, 30);
+  const commentGrowthDaily = getDailyData(allCommentsRecent, 30);
+  const revenueDaily = getDailySum(
+    coinHistoryRecent.filter((c) => c.amount < 0 && c.type === "unlock"),
+    14
+  );
+
+  const maxRevenue = Math.max(...revenueDaily.map((d) => d.total), 1);
+  const maxUserGrowth = Math.max(...userGrowthDaily.map((d) => d.count), 1);
+  const maxChapterGrowth = Math.max(...chapterGrowthDaily.map((d) => d.count), 1);
+  const maxCommentGrowth = Math.max(...commentGrowthDaily.map((d) => d.count), 1);
+
+  // ── Financial analytics ──
+  const totalUnlockRevenue = coinHistoryAll
+    .filter((c) => c.amount < 0 && c.type === "unlock")
+    .reduce((sum, c) => sum + Math.abs(c.amount), 0);
+  const totalTopups = coinHistoryAll
+    .filter((c) => c.amount > 0 && c.type === "topup")
+    .reduce((sum, c) => sum + c.amount, 0);
+  const totalRefunds = coinHistoryAll
+    .filter((c) => c.amount > 0 && c.type === "reset")
+    .reduce((sum, c) => sum + c.amount, 0);
+  const totalSubscriptionsRevenue = coinHistoryAll
+    .filter((c) => c.amount < 0 && c.type === "subscription")
+    .reduce((sum, c) => sum + Math.abs(c.amount), 0);
+  const netRevenue = totalUnlockRevenue + totalSubscriptionsRevenue;
+  const totalCoinsInCirculation = await db.user.aggregate({ _sum: { coins: true } }).then((r) => r._sum.coins || 0);
+
+  const revenueThisWeek = coinHistoryAll
+    .filter((c) => c.amount < 0 && c.type === "unlock" && c.createdAt >= lastWeek)
+    .reduce((sum, c) => sum + Math.abs(c.amount), 0);
+  const revenueThisMonth = coinHistoryAll
+    .filter((c) => c.amount < 0 && c.type === "unlock" && c.createdAt >= lastMonth)
+    .reduce((sum, c) => sum + Math.abs(c.amount), 0);
+
+  // ── Active users (DAU / WAU / MAU) ──
+  const dauDate = getDateRange(1);
+  const wauDate = getDateRange(7);
+  const mauDate = getDateRange(30);
+  const [dauCount, wauCount, mauCount] = await Promise.all([
+    db.user.count({ where: { lastActiveAt: { gte: dauDate } } }),
+    db.user.count({ where: { lastActiveAt: { gte: wauDate } } }),
+    db.user.count({ where: { lastActiveAt: { gte: mauDate } } }),
+  ]);
+
+  // ── Top revenue novels ──
+  const revenueByNovel = new Map<string, number>();
+  coinHistoryAll
+    .filter((c) => c.amount < 0 && c.type === "unlock" && c.novelId)
+    .forEach((c) => {
+      revenueByNovel.set(c.novelId!, (revenueByNovel.get(c.novelId!) || 0) + Math.abs(c.amount));
+    });
+
+  const topRevenueNovels = novelsForStats
+    .map((novel) => ({
+      id: novel.id,
+      title: novel.title,
+      revenue: revenueByNovel.get(novel.id) || 0,
+      totalViews: viewCounts.get(novel.id) || 0,
+      reviewCount: novel._count.reviews,
+      avgRating: novel.reviews.length > 0
+        ? (novel.reviews.reduce((sum, r) => sum + r.rating, 0) / novel.reviews.length).toFixed(1)
+        : "0.0",
+    }))
+    .filter((n) => n.revenue > 0)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
+  // ── Novels with stats ──
   const novelsWithStats = novelsForStats.map((novel) => {
     const totalViews = viewCounts.get(novel.id) || 0;
     const avgRating = novel.reviews.length > 0
       ? (novel.reviews.reduce((sum, r) => sum + r.rating, 0) / novel.reviews.length).toFixed(1)
       : "0.0";
-    const reviewCount = novel._count.reviews;
-
     return {
       id: novel.id,
       title: novel.title,
       _count: novel._count,
       totalViews,
       avgRating,
-      reviewCount,
+      reviewCount: novel._count.reviews,
     };
   });
 
@@ -162,13 +315,17 @@ export default async function AdminDashboard() {
     .sort((a, b) => parseFloat(b.avgRating) - parseFloat(a.avgRating))
     .slice(0, 5);
 
-  const userGrowthRate = newUsersThisWeek > 0
-    ? Math.round((newUsersThisWeek / userCount) * 100)
-    : 0;
+  // ── Unlock stats ──
+  const totalUnlockedThisWeek = unlockedChaptersRecent.filter((u) => u.createdAt >= lastWeek).length +
+    unlockedVolumesRecent.filter((u) => u.createdAt >= lastWeek).length;
+  const totalUnlockedThisMonth = unlockedChaptersRecent.length + unlockedVolumesRecent.length;
 
-  const engagementRate = userCount > 0
-    ? Math.round(((commentCount + reviewCount) / userCount) * 100)
-    : 0;
+  // ── Subscription stats ──
+  const simpleSubs = subscriptionHistoryRecent.filter((s) => s.plan === "simple").length;
+  const mediumSubs = subscriptionHistoryRecent.filter((s) => s.plan === "medium").length;
+
+  const userGrowthRate = newUsersThisWeek > 0 ? Math.round((newUsersThisWeek / userCount) * 100) : 0;
+  const engagementRate = userCount > 0 ? Math.round(((commentCount + reviewCount) / userCount) * 100) : 0;
 
   return (
     <div className={styles.container}>
@@ -177,7 +334,7 @@ export default async function AdminDashboard() {
         <span className={styles.lastUpdated}>Шинэчлэгдсэн: {new Date().toLocaleString("mn-MN")}</span>
       </div>
 
-      {/* Main Overview Stats */}
+      {/* ── Main Overview Stats ── */}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Ерөнхий мэдээлэл</h2>
         <div className={styles.statsGrid}>
@@ -189,7 +346,6 @@ export default async function AdminDashboard() {
               <span className={styles.statChange}>+{newNovelsThisWeek} энэ 7 хоногт</span>
             </div>
           </div>
-
           <div className={`${styles.statCard} ${styles.statSecondary}`}>
             <div className={styles.statIcon}>📖</div>
             <div className={styles.statContent}>
@@ -198,7 +354,6 @@ export default async function AdminDashboard() {
               <span className={styles.statDetail}>{chapterCount} энгийн • {volumeChapterCount} volume</span>
             </div>
           </div>
-
           <div className={`${styles.statCard} ${styles.statSuccess}`}>
             <div className={styles.statIcon}>👥</div>
             <div className={styles.statContent}>
@@ -207,7 +362,6 @@ export default async function AdminDashboard() {
               <span className={styles.statChange}>+{newUsersToday} өнөөдөр</span>
             </div>
           </div>
-
           <div className={`${styles.statCard} ${styles.statWarning}`}>
             <div className={styles.statIcon}>💬</div>
             <div className={styles.statContent}>
@@ -216,7 +370,6 @@ export default async function AdminDashboard() {
               <span className={styles.statChange}>+{newCommentsToday} өнөөдөр</span>
             </div>
           </div>
-
           <div className={`${styles.statCard} ${styles.statInfo}`}>
             <div className={styles.statIcon}>⭐</div>
             <div className={styles.statContent}>
@@ -225,7 +378,6 @@ export default async function AdminDashboard() {
               <span className={styles.statChange}>+{newReviewsToday} өнөөдөр</span>
             </div>
           </div>
-
           <div className={`${styles.statCard} ${styles.statDanger}`}>
             <div className={styles.statIcon}>📊</div>
             <div className={styles.statContent}>
@@ -237,7 +389,202 @@ export default async function AdminDashboard() {
         </div>
       </section>
 
-      {/* Content Distribution */}
+      {/* ── Financial Overview ── */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>💰 Санхүүгийн мэдээлэл</h2>
+        <div className={styles.statsGrid}>
+          <div className={`${styles.statCard} ${styles.statSuccess}`}>
+            <div className={styles.statIcon}>💵</div>
+            <div className={styles.statContent}>
+              <span className={styles.statValue}>{netRevenue.toLocaleString()}</span>
+              <span className={styles.statLabel}>Нийт орлого (зоос)</span>
+              <span className={styles.statDetail}>Тайлсан + Багц</span>
+            </div>
+          </div>
+          <div className={`${styles.statCard} ${styles.statPrimary}`}>
+            <div className={styles.statIcon}>📥</div>
+            <div className={styles.statContent}>
+              <span className={styles.statValue}>{totalTopups.toLocaleString()}</span>
+              <span className={styles.statLabel}>Цэнэглэлт (зоос)</span>
+              <span className={styles.statDetail}>Хэрэглэгчдийн цэнэглэлт</span>
+            </div>
+          </div>
+          <div className={`${styles.statCard} ${styles.statInfo}`}>
+            <div className={styles.statIcon}>🪙</div>
+            <div className={styles.statContent}>
+              <span className={styles.statValue}>{totalCoinsInCirculation.toLocaleString()}</span>
+              <span className={styles.statLabel}>Эргэлтэд буй зоос</span>
+              <span className={styles.statDetail}>Бүх хэрэглэгчид дээр</span>
+            </div>
+          </div>
+          <div className={`${styles.statCard} ${styles.statWarning}`}>
+            <div className={styles.statIcon}>🔓</div>
+            <div className={styles.statContent}>
+              <span className={styles.statValue}>{totalUnlockedThisMonth.toLocaleString()}</span>
+              <span className={styles.statLabel}>Тайлсан (30 хоног)</span>
+              <span className={styles.statChange}>+{totalUnlockedThisWeek} энэ 7 хоногт</span>
+            </div>
+          </div>
+          <div className={`${styles.statCard} ${styles.statSecondary}`}>
+            <div className={styles.statIcon}>📈</div>
+            <div className={styles.statContent}>
+              <span className={styles.statValue}>{revenueThisWeek.toLocaleString()}</span>
+              <span className={styles.statLabel}>7 хоногийн орлого</span>
+              <span className={styles.statDetail}>{revenueThisMonth.toLocaleString()} (30 хоног)</span>
+            </div>
+          </div>
+          <div className={`${styles.statCard} ${styles.statDanger}`}>
+            <div className={styles.statIcon}>↩️</div>
+            <div className={styles.statContent}>
+              <span className={styles.statValue}>{totalRefunds.toLocaleString()}</span>
+              <span className={styles.statLabel}>Буцаан олголт</span>
+              <span className={styles.statDetail}>Админ reset хийсэн</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Active Users ── */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>👤 Идэвхтэй хэрэглэгчид</h2>
+        <div className={styles.statsGrid} style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          <div className={`${styles.statCard} ${styles.statPrimary}`}>
+            <div className={styles.statIcon}>📅</div>
+            <div className={styles.statContent}>
+              <span className={styles.statValue}>{dauCount.toLocaleString()}</span>
+              <span className={styles.statLabel}>DAU (Өдөрт)</span>
+              <span className={styles.statDetail}>Сүүлийн 24 цагт идэвхтэй</span>
+            </div>
+          </div>
+          <div className={`${styles.statCard} ${styles.statSecondary}`}>
+            <div className={styles.statIcon}>🗓️</div>
+            <div className={styles.statContent}>
+              <span className={styles.statValue}>{wauCount.toLocaleString()}</span>
+              <span className={styles.statLabel}>WAU (7 хоногт)</span>
+              <span className={styles.statDetail}>Сүүлийн 7 хоногт идэвхтэй</span>
+            </div>
+          </div>
+          <div className={`${styles.statCard} ${styles.statSuccess}`}>
+            <div className={styles.statIcon}>📆</div>
+            <div className={styles.statContent}>
+              <span className={styles.statValue}>{mauCount.toLocaleString()}</span>
+              <span className={styles.statLabel}>MAU (Сарын)</span>
+              <span className={styles.statDetail}>Сүүлийн 30 хоногт идэвхтэй</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Charts Row ── */}
+      <div className={styles.twoColumnGrid}>
+        {/* Revenue Chart */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>📈 Орлогын чиг хандлага (14 хоног)</h2>
+          <div className={styles.chartCard}>
+            <div className={styles.chartBars}>
+              {revenueDaily.map((day, i) => (
+                <div key={i} className={styles.chartBarWrapper}>
+                  <div className={styles.chartBarContainer}>
+                    <div
+                      className={styles.chartBar}
+                      style={{
+                        height: `${(day.total / maxRevenue) * 100}%`,
+                        minHeight: day.total > 0 ? "4px" : "0",
+                      }}
+                    />
+                  </div>
+                  <span className={styles.chartLabel}>{day.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className={styles.chartLegend}>
+              <span>Нийт: {revenueDaily.reduce((s, d) => s + d.total, 0).toLocaleString()} зоос (14 хоног)</span>
+            </div>
+          </div>
+        </section>
+
+        {/* User Growth Chart */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>👥 Шинэ хэрэглэгчид (30 хоног)</h2>
+          <div className={styles.chartCard}>
+            <div className={styles.chartBars}>
+              {userGrowthDaily.slice(-14).map((day, i) => (
+                <div key={i} className={styles.chartBarWrapper}>
+                  <div className={styles.chartBarContainer}>
+                    <div
+                      className={`${styles.chartBar} ${styles.chartBarBlue}`}
+                      style={{
+                        height: `${(day.count / maxUserGrowth) * 100}%`,
+                        minHeight: day.count > 0 ? "4px" : "0",
+                      }}
+                    />
+                  </div>
+                  <span className={styles.chartLabel}>{day.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className={styles.chartLegend}>
+              <span>Нийт: {userGrowthDaily.reduce((s, d) => s + d.count, 0).toLocaleString()} (30 хоног)</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div className={styles.twoColumnGrid}>
+        {/* Content Growth Chart */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>📝 Шинэ бүлэг (30 хоног)</h2>
+          <div className={styles.chartCard}>
+            <div className={styles.chartBars}>
+              {chapterGrowthDaily.slice(-14).map((day, i) => (
+                <div key={i} className={styles.chartBarWrapper}>
+                  <div className={styles.chartBarContainer}>
+                    <div
+                      className={`${styles.chartBar} ${styles.chartBarGreen}`}
+                      style={{
+                        height: `${(day.count / maxChapterGrowth) * 100}%`,
+                        minHeight: day.count > 0 ? "4px" : "0",
+                      }}
+                    />
+                  </div>
+                  <span className={styles.chartLabel}>{day.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className={styles.chartLegend}>
+              <span>Нийт: {chapterGrowthDaily.reduce((s, d) => s + d.count, 0).toLocaleString()} (30 хоног)</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Comment Growth Chart */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>💬 Сэтгэгдлийн идэвх (30 хоног)</h2>
+          <div className={styles.chartCard}>
+            <div className={styles.chartBars}>
+              {commentGrowthDaily.slice(-14).map((day, i) => (
+                <div key={i} className={styles.chartBarWrapper}>
+                  <div className={styles.chartBarContainer}>
+                    <div
+                      className={`${styles.chartBar} ${styles.chartBarPurple}`}
+                      style={{
+                        height: `${(day.count / maxCommentGrowth) * 100}%`,
+                        minHeight: day.count > 0 ? "4px" : "0",
+                      }}
+                    />
+                  </div>
+                  <span className={styles.chartLabel}>{day.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className={styles.chartLegend}>
+              <span>Нийт: {commentGrowthDaily.reduce((s, d) => s + d.count, 0).toLocaleString()} (30 хоног)</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* ── Content Distribution + Engagement ── */}
       <div className={styles.twoColumnGrid}>
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Контентийн хуваарилалт</h2>
@@ -245,47 +592,33 @@ export default async function AdminDashboard() {
             <div className={styles.distCard}>
               <h3>📚 Novels</h3>
               <div className={styles.distBar}>
-                <div className={styles.distProgress} style={{ width: `${ongoingNovels / Math.max(novelCount, 1) * 100}%`, background: "var(--success)" }}></div>
+                <div className={styles.distProgress} style={{ width: `${ongoingNovels / Math.max(novelCount, 1) * 100}%`, background: "var(--success)" }} />
               </div>
               <div className={styles.distStats}>
-                <span><span className={styles.dot} style={{ background: "var(--success)" }}></span>Үргэлжилж буй: {ongoingNovels}</span>
-                <span><span className={styles.dot} style={{ background: "var(--primary)" }}></span>Дууссан: {completedNovels}</span>
-                <span><span className={styles.dot} style={{ background: "var(--error)" }}></span>Зогссон: {droppedNovels}</span>
+                <span><span className={styles.dot} style={{ background: "var(--success)" }} />Үргэлжилж буй: {ongoingNovels}</span>
+                <span><span className={styles.dot} style={{ background: "var(--primary)" }} />Дууссан: {completedNovels}</span>
+                <span><span className={styles.dot} style={{ background: "var(--error)" }} />Зогссон: {droppedNovels}</span>
               </div>
             </div>
-
             <div className={styles.distCard}>
               <h3>👥 Хэрэглэгчдийн эрх</h3>
               <div className={styles.distBar}>
-                <div className={styles.distProgress} style={{ width: `${regularUserCount / Math.max(userCount, 1) * 100}%`, background: "var(--primary)" }}></div>
+                <div className={styles.distProgress} style={{ width: `${regularUserCount / Math.max(userCount, 1) * 100}%`, background: "var(--primary)" }} />
               </div>
               <div className={styles.distStats}>
-                <span><span className={styles.dot} style={{ background: "var(--error)" }}></span>Админ: {adminCount}</span>
-                <span><span className={styles.dot} style={{ background: "var(--warning)" }}></span>Модератор: {moderatorCount}</span>
-                <span><span className={styles.dot} style={{ background: "var(--primary)" }}></span>Хэрэглэгч: {regularUserCount}</span>
-                <span><span className={styles.dot} style={{ background: "var(--error)" }}></span>Хязгаарлагдсан: {restrictedUsers}</span>
+                <span><span className={styles.dot} style={{ background: "var(--error)" }} />Админ: {adminCount}</span>
+                <span><span className={styles.dot} style={{ background: "var(--warning)" }} />Модератор: {moderatorCount}</span>
+                <span><span className={styles.dot} style={{ background: "var(--primary)" }} />Хэрэглэгч: {regularUserCount}</span>
+                <span><span className={styles.dot} style={{ background: "var(--error)" }} />Хязгаарлагдсан: {restrictedUsers}</span>
               </div>
             </div>
-
             <div className={styles.distCard}>
               <h3>📖 Контент</h3>
               <div className={styles.contentBreakdown}>
-                <div className={styles.breakdownItem}>
-                  <span>📦 Volumes</span>
-                  <span>{volumeCount}</span>
-                </div>
-                <div className={styles.breakdownItem}>
-                  <span>📄 Volume бүлэг</span>
-                  <span>{volumeChapterCount}</span>
-                </div>
-                <div className={styles.breakdownItem}>
-                  <span>📝 Энгийн бүлэг</span>
-                  <span>{chapterCount}</span>
-                </div>
-                <div className={styles.breakdownItem}>
-                  <span>⏳ Товлосон</span>
-                  <span>{scheduledChapters}</span>
-                </div>
+                <div className={styles.breakdownItem}><span>📦 Volumes</span><span>{volumeCount}</span></div>
+                <div className={styles.breakdownItem}><span>📄 Volume бүлэг</span><span>{volumeChapterCount}</span></div>
+                <div className={styles.breakdownItem}><span>📝 Энгийн бүлэг</span><span>{chapterCount}</span></div>
+                <div className={styles.breakdownItem}><span>⏳ Товлосон</span><span>{scheduledChapters}</span></div>
               </div>
             </div>
           </div>
@@ -294,35 +627,35 @@ export default async function AdminDashboard() {
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Идэвхжил</h2>
           <div className={styles.activityGrid}>
-            <div className={styles.miniStat}>
-              <span className={styles.miniValue}>{readingProgressCount.toLocaleString()}</span>
-              <span className={styles.miniLabel}>Унших явц</span>
-            </div>
-            <div className={styles.miniStat}>
-              <span className={styles.miniValue}>{savedNovelCount.toLocaleString()}</span>
-              <span className={styles.miniLabel}>Хадгалсан</span>
-            </div>
-            <div className={styles.miniStat}>
-              <span className={styles.miniValue}>{(totalCommentLikes + totalReviewLikes).toLocaleString()}</span>
-              <span className={styles.miniLabel}>Like-ууд</span>
-            </div>
-            <div className={styles.miniStat}>
-              <span className={styles.miniValue}>{totalReplies.toLocaleString()}</span>
-              <span className={styles.miniLabel}>Хариултууд</span>
-            </div>
-            <div className={styles.miniStat}>
-              <span className={styles.miniValue}>{pinnedComments}</span>
-              <span className={styles.miniLabel}>Pinned</span>
-            </div>
-            <div className={styles.miniStat}>
-              <span className={styles.miniValue}>{notificationCount.toLocaleString()}</span>
-              <span className={styles.miniLabel}>Мэдэгдлүүд</span>
+            <div className={styles.miniStat}><span className={styles.miniValue}>{readingProgressCount.toLocaleString()}</span><span className={styles.miniLabel}>Унших явц</span></div>
+            <div className={styles.miniStat}><span className={styles.miniValue}>{savedNovelCount.toLocaleString()}</span><span className={styles.miniLabel}>Хадгалсан</span></div>
+            <div className={styles.miniStat}><span className={styles.miniValue}>{(totalCommentLikes + totalReviewLikes).toLocaleString()}</span><span className={styles.miniLabel}>Like-ууд</span></div>
+            <div className={styles.miniStat}><span className={styles.miniValue}>{totalReplies.toLocaleString()}</span><span className={styles.miniLabel}>Хариултууд</span></div>
+            <div className={styles.miniStat}><span className={styles.miniValue}>{pinnedComments}</span><span className={styles.miniLabel}>Pinned</span></div>
+            <div className={styles.miniStat}><span className={styles.miniValue}>{notificationCount.toLocaleString()}</span><span className={styles.miniLabel}>Мэдэгдлүүд</span></div>
+          </div>
+          {/* Subscription stats */}
+          <div className={styles.subscriptionCard} style={{ marginTop: "1.5rem" }}>
+            <h3 style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: "0.75rem" }}>📋 Багц захиалга (30 хоног)</h3>
+            <div className={styles.subscriptionGrid}>
+              <div className={styles.miniStat}>
+                <span className={styles.miniValue} style={{ color: "var(--success)" }}>{simpleSubs}</span>
+                <span className={styles.miniLabel}>Энгийн багц</span>
+              </div>
+              <div className={styles.miniStat}>
+                <span className={styles.miniValue} style={{ color: "var(--primary)" }}>{mediumSubs}</span>
+                <span className={styles.miniLabel}>Дунд багц</span>
+              </div>
+              <div className={styles.miniStat}>
+                <span className={styles.miniValue} style={{ color: "var(--warning)" }}>{subscriptionHistoryRecent.length}</span>
+                <span className={styles.miniLabel}>Нийт багц</span>
+              </div>
             </div>
           </div>
         </section>
       </div>
 
-      {/* Reports & Growth Section */}
+      {/* ── Reports & Growth ── */}
       <div className={styles.twoColumnGrid}>
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Мэдээллүүд</h2>
@@ -333,22 +666,21 @@ export default async function AdminDashboard() {
             </div>
             <div className={styles.reportBreakdown}>
               <div className={styles.reportItem}>
-                <span className={styles.reportIndicator} style={{ background: "var(--error)" }}></span>
+                <span className={styles.reportIndicator} style={{ background: "var(--error)" }} />
                 <span>Хүлээгдэж байна: {pendingReports}</span>
                 {pendingReports > 0 && <span className={styles.badge}>⚠️</span>}
               </div>
               <div className={styles.reportItem}>
-                <span className={styles.reportIndicator} style={{ background: "var(--success)" }}></span>
+                <span className={styles.reportIndicator} style={{ background: "var(--success)" }} />
                 <span>Шийдвэрлэгдсэн: {resolvedReports}</span>
               </div>
               <div className={styles.reportItem}>
-                <span className={styles.reportIndicator} style={{ background: "var(--primary)" }}></span>
+                <span className={styles.reportIndicator} style={{ background: "var(--primary)" }} />
                 <span>Өнөөдөр: {reportsToday}</span>
               </div>
             </div>
           </div>
         </section>
-
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Өсөлт</h2>
           <div className={styles.growthGrid}>
@@ -358,18 +690,9 @@ export default async function AdminDashboard() {
                 <span className={styles.growthRate}>+{userGrowthRate}%</span>
               </div>
               <div className={styles.growthPeriods}>
-                <div className={styles.period}>
-                  <span className={styles.periodLabel}>Өнөөдөр</span>
-                  <span className={styles.periodValue}>+{newUsersToday}</span>
-                </div>
-                <div className={styles.period}>
-                  <span className={styles.periodLabel}>7 хоног</span>
-                  <span className={styles.periodValue}>+{newUsersThisWeek}</span>
-                </div>
-                <div className={styles.period}>
-                  <span className={styles.periodLabel}>30 хоног</span>
-                  <span className={styles.periodValue}>+{newUsersThisMonth}</span>
-                </div>
+                <div className={styles.period}><span className={styles.periodLabel}>Өнөөдөр</span><span className={styles.periodValue}>+{newUsersToday}</span></div>
+                <div className={styles.period}><span className={styles.periodLabel}>7 хоног</span><span className={styles.periodValue}>+{newUsersThisWeek}</span></div>
+                <div className={styles.period}><span className={styles.periodLabel}>30 хоног</span><span className={styles.periodValue}>+{newUsersThisMonth}</span></div>
               </div>
             </div>
             <div className={styles.growthCard}>
@@ -383,56 +706,30 @@ export default async function AdminDashboard() {
         </section>
       </div>
 
-      {/* Recent Activity */}
+      {/* ── Top Revenue Novels ── */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Сүүлийн үйлдлүүд</h2>
-        <div className={styles.twoColumnGrid}>
-          <div className={styles.activityPanel}>
-            <h3>🆕 Шинэ хэрэглэгчид</h3>
-            <div className={styles.activityList}>
-              {recentUsers.map((user) => (
-                <div key={user.id} className={styles.activityItem}>
-                  <div className={styles.activityAvatar}>{user.username[0].toUpperCase()}</div>
-                  <div className={styles.activityInfo}>
-                    <span className={styles.activityName}>{user.username}</span>
-                    <span className={styles.activityTime}>
-                      {new Date(user.createdAt).toLocaleString("mn-MN")}
-                    </span>
-                  </div>
+        <h2 className={styles.sectionTitle}>💰 Хамгийн их орлоготой Novels</h2>
+        <div className={styles.topContentGrid}>
+          {topRevenueNovels.map((novel, index) => (
+            <div key={novel.id} className={styles.topContentCard}>
+              <div className={`${styles.topRank} ${styles.topRankRevenue}`}>#{index + 1}</div>
+              <div className={styles.topInfo}>
+                <h4 className={styles.topTitle}>{novel.title}</h4>
+                <div className={styles.topStats}>
+                  <span className={styles.topStatHighlight}>💵 {novel.revenue.toLocaleString()} зоос</span>
+                  <span>👁️ {novel.totalViews.toLocaleString()}</span>
+                  <span>⭐ {novel.avgRating}</span>
                 </div>
-              ))}
-              {recentUsers.length === 0 && (
-                <p className={styles.emptyState}>Шинэ хэрэглэгч алга</p>
-              )}
+              </div>
             </div>
-          </div>
-
-          <div className={styles.activityPanel}>
-            <h3>💬 Сүүлийн сэтгэгдлүүд</h3>
-            <div className={styles.activityList}>
-              {recentComments.map((comment) => (
-                <div key={comment.id} className={styles.activityItem}>
-                  <div className={styles.activityAvatar}>{comment.user.username[0].toUpperCase()}</div>
-                  <div className={styles.activityInfo}>
-                    <span className={styles.activityName}>{comment.user.username}</span>
-                    <span className={styles.activityPreview}>
-                      {comment.content.slice(0, 50)}{comment.content.length > 50 ? "..." : ""}
-                    </span>
-                    <span className={styles.activityTime}>
-                      {new Date(comment.createdAt).toLocaleString("mn-MN")}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {recentComments.length === 0 && (
-                <p className={styles.emptyState}>Сэтгэгдэл алга</p>
-              )}
-            </div>
-          </div>
+          ))}
+          {topRevenueNovels.length === 0 && (
+            <p className={styles.emptyState}>Орлоготой novels алга</p>
+          )}
         </div>
       </section>
 
-      {/* Top Content by Views */}
+      {/* ── Top Content by Views ── */}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>🔥 Хамгийн их уншигдсан (Views)</h2>
         <div className={styles.topContentGrid}>
@@ -455,7 +752,7 @@ export default async function AdminDashboard() {
         </div>
       </section>
 
-      {/* Top Content by Rating */}
+      {/* ── Top Content by Rating ── */}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>⭐ Хамгийн өндөр үнэлгээтэй (Rating)</h2>
         <div className={styles.topContentGrid}>
@@ -475,6 +772,44 @@ export default async function AdminDashboard() {
           {topNovelsByRating.length === 0 && (
             <p className={styles.emptyState}>Хангалттай үнэлгээтэй novels алга (хамгийн багадаа 3 үнэлгээ шаардлагатай)</p>
           )}
+        </div>
+      </section>
+
+      {/* ── Recent Activity ── */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Сүүлийн үйлдлүүд</h2>
+        <div className={styles.twoColumnGrid}>
+          <div className={styles.activityPanel}>
+            <h3>🆕 Шинэ хэрэглэгчид</h3>
+            <div className={styles.activityList}>
+              {recentUsers.map((user) => (
+                <div key={user.id} className={styles.activityItem}>
+                  <div className={styles.activityAvatar}>{user.username[0].toUpperCase()}</div>
+                  <div className={styles.activityInfo}>
+                    <span className={styles.activityName}>{user.username}</span>
+                    <span className={styles.activityTime}>{new Date(user.createdAt).toLocaleString("mn-MN")}</span>
+                  </div>
+                </div>
+              ))}
+              {recentUsers.length === 0 && <p className={styles.emptyState}>Шинэ хэрэглэгч алга</p>}
+            </div>
+          </div>
+          <div className={styles.activityPanel}>
+            <h3>💬 Сүүлийн сэтгэгдлүүд</h3>
+            <div className={styles.activityList}>
+              {recentComments.map((comment) => (
+                <div key={comment.id} className={styles.activityItem}>
+                  <div className={styles.activityAvatar}>{comment.user.username[0].toUpperCase()}</div>
+                  <div className={styles.activityInfo}>
+                    <span className={styles.activityName}>{comment.user.username}</span>
+                    <span className={styles.activityPreview}>{comment.content.slice(0, 50)}{comment.content.length > 50 ? "..." : ""}</span>
+                    <span className={styles.activityTime}>{new Date(comment.createdAt).toLocaleString("mn-MN")}</span>
+                  </div>
+                </div>
+              ))}
+              {recentComments.length === 0 && <p className={styles.emptyState}>Сэтгэгдэл алга</p>}
+            </div>
+          </div>
         </div>
       </section>
     </div>

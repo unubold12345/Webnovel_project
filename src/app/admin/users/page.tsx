@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { Toast, useToast } from "@/components/ui/Toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import NotificationModal from "@/components/ui/NotificationModal";
 import styles from "./page.module.css";
 
 interface User {
@@ -18,6 +19,8 @@ interface User {
   avatar: string | null;
   bio: string | null;
   createdAt: string;
+  subscriptionPlan: string | null;
+  subscriptionExpiresAt: string | null;
   _count: {
     comments: number;
   };
@@ -37,6 +40,15 @@ export default function AdminUsersPage() {
   const [restrictAction, setRestrictAction] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+
+  const [notifModalOpen, setNotifModalOpen] = useState(false);
+  const [notifTarget, setNotifTarget] = useState<User | null>(null);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  const [openMenuUserId, setOpenMenuUserId] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const menuBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
   const { addToast } = useToast();
 
   const currentUserRole = session?.user?.role;
@@ -47,6 +59,26 @@ export default function AdminUsersPage() {
   useEffect(() => {
     fetchUsers();
   }, [search, page]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("." + styles.actionMenuWrap) && !target.closest("." + styles.actionMenu)) {
+        setOpenMenuUserId(null);
+        setMenuPos(null);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  const openMenuFor = useCallback((userId: string) => {
+    const btn = menuBtnRefs.current.get(userId);
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    setMenuPos({ top: rect.bottom + 4, left: rect.right - 180 });
+    setOpenMenuUserId(userId);
+  }, []);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -188,10 +220,61 @@ export default function AdminUsersPage() {
     return `"${deleteTarget.username}" хэрэглэгчийг устгахдаа итгэлтэй байна уу? Энэ үйлдэл буцаагдахгүй. Тухайн хэрэглэгчийн бүх сэтгэгдэл, тойм, өгөгдөл бүрмөсөн устах болно.`;
   };
 
+  const handleOpenNotifModal = (user?: User) => {
+    setNotifTarget(user || null);
+    setNotifModalOpen(true);
+  };
+
+  const handleSendNotification = async (message: string, link: string) => {
+    setNotifLoading(true);
+    try {
+      const res = await fetch("/api/admin/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: notifTarget?.id || null,
+          message,
+          link: link || null,
+          type: "admin",
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (notifTarget) {
+          addToast(`"${notifTarget.username}" хэрэглэгч рүү мэдэгдэл илгээгдлээ`, "success");
+        } else {
+          addToast(`Бүх хэрэглэгч рүү мэдэгдэл илгээгдлээ (${data.count} хэрэглэгч)`, "success");
+        }
+        setNotifModalOpen(false);
+        setNotifTarget(null);
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Мэдэгдэл илгээхэд алдаа гарлаа", "error");
+      }
+    } catch {
+      addToast("Мэдэгдэл илгээхэд алдаа гарлаа", "error");
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Хэрэглэгчид</h1>
+        {isAdmin && (
+          <button
+            onClick={() => handleOpenNotifModal()}
+            className={styles.notifyAllButton}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            Бүгдэд мэдэгдэл илгээх
+          </button>
+        )}
       </div>
 
       <form onSubmit={handleSearch} className={styles.searchForm}>
@@ -270,40 +353,60 @@ export default function AdminUsersPage() {
                       )}
                     </td>
                     <td data-label="Төлөв">
-                      {user.isRestricted ? (
-                        <span className={styles.statusRestricted}>Хязгаарлагдсан</span>
-                      ) : (
-                        <span className={styles.statusActive}>Идэвхитэй</span>
-                      )}
+                      <div className={styles.statusCell}>
+                        {user.isRestricted ? (
+                          <span className={styles.statusRestricted}>Хязгаарлагдсан</span>
+                        ) : (
+                          <span className={styles.statusActive}>Идэвхитэй</span>
+                        )}
+                        {user.subscriptionPlan && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date() && (
+                          <span className={`${styles.planBadge} ${user.subscriptionPlan === "medium" ? styles.mediumPlan : styles.simplePlan}`}>
+                            {user.subscriptionPlan === "simple" ? "Simple" : "Medium"}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td data-label="Сүүлд идэвхитэй">{formatLastActive(user.lastActiveAt)}</td>
                     <td data-label="Сэтгэгдэл">{user._count.comments}</td>
                     <td data-label="Нэгдсэн">{new Date(user.createdAt).toLocaleDateString()}</td>
                     <td className={styles.actions}>
-                      {isAdmin && user.id !== session?.user?.id && user.role !== "admin" && user.role !== "moderator" && (
-                        <button
-                          onClick={() => handleRestrictionClick(user, !user.isRestricted)}
-                          disabled={actionLoading === user.id}
-                          className={`${styles.actionButton} ${user.isRestricted ? styles.unrestrict : styles.restrict}`}
-                        >
-                          {user.isRestricted ? "Хязгаарлалт арилгах" : "Хязгаарлах"}
-                        </button>
-                      )}
-                      {isAdmin && user.id !== session?.user?.id && (
-                        <button
-                          onClick={() => handleDeleteClick(user)}
-                          disabled={actionLoading === user.id}
-                          className={styles.deleteButton}
-                        >
-                          Устгах
-                        </button>
-                      )}
+                      <Link
+                        href={`/admin/users/${user.id}/info`}
+                        className={styles.actionButton}
+                      >
+                        Мэдээлэл
+                      </Link>
                       <Link
                         href={`/user/${user.id}`}
                         className={styles.actionButton}
                       >
                         Профайл харах
                       </Link>
+                      <div className={styles.actionMenuWrap}>
+                        <button
+                          ref={(el) => {
+                            if (el) menuBtnRefs.current.set(user.id, el);
+                            else menuBtnRefs.current.delete(user.id);
+                          }}
+                          className={styles.menuButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (openMenuUserId === user.id) {
+                              setOpenMenuUserId(null);
+                              setMenuPos(null);
+                            } else {
+                              openMenuFor(user.id);
+                            }
+                          }}
+                          aria-label="Үйлдлүүд"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="5" r="2"/>
+                            <circle cx="12" cy="12" r="2"/>
+                            <circle cx="12" cy="19" r="2"/>
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -335,6 +438,68 @@ export default function AdminUsersPage() {
         )}
       </div>
 
+      {(() => {
+        const user = users.find((u) => u.id === openMenuUserId);
+        if (!user || !menuPos) return null;
+        return (
+          <div
+            className={styles.actionMenu}
+            style={{ position: "fixed", top: menuPos.top, left: menuPos.left }}
+          >
+            {isAdmin && user.id !== session?.user?.id && (
+              <button
+                className={styles.menuItem}
+                onClick={() => {
+                  setOpenMenuUserId(null);
+                  setMenuPos(null);
+                  handleOpenNotifModal(user);
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                Мэдэгдэл илгээх
+              </button>
+            )}
+            {isAdmin && user.id !== session?.user?.id && user.role !== "admin" && user.role !== "moderator" && (
+              <button
+                className={styles.menuItem}
+                onClick={() => {
+                  setOpenMenuUserId(null);
+                  setMenuPos(null);
+                  handleRestrictionClick(user, !user.isRestricted);
+                }}
+                disabled={actionLoading === user.id}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+                {user.isRestricted ? "Хязгаарлалт арилгах" : "Хязгаарлах"}
+              </button>
+            )}
+            {isAdmin && user.id !== session?.user?.id && (
+              <button
+                className={`${styles.menuItem} ${styles.menuItemDanger}`}
+                onClick={() => {
+                  setOpenMenuUserId(null);
+                  setMenuPos(null);
+                  handleDeleteClick(user);
+                }}
+                disabled={actionLoading === user.id}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Устгах
+              </button>
+            )}
+          </div>
+        );
+      })()}
+
       <ConfirmModal
         isOpen={restrictModalOpen}
         title={restrictAction ? "Хэрэглэгч хязгаарлах" : "Хязгаарлалт арилгах"}
@@ -361,6 +526,17 @@ export default function AdminUsersPage() {
           setDeleteModalOpen(false);
           setDeleteTarget(null);
         }}
+      />
+
+      <NotificationModal
+        isOpen={notifModalOpen}
+        recipientLabel={notifTarget ? notifTarget.username : "Бүх хэрэглэгчид"}
+        onSend={handleSendNotification}
+        onCancel={() => {
+          setNotifModalOpen(false);
+          setNotifTarget(null);
+        }}
+        loading={notifLoading}
       />
     </div>
   );

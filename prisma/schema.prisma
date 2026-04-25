@@ -23,9 +23,13 @@ model User {
   passwordResetExpires DateTime?
   role            String            @default("user")
   isRestricted    Boolean           @default(false)
+  coins           Int               @default(0)
+  subscriptionPlan String?
+  subscriptionExpiresAt DateTime?
   lastActiveAt    DateTime          @default(now())
   avatar          String?
   bio             String?
+  acceptedTermsAt DateTime?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   comments        Comment[]
@@ -36,6 +40,12 @@ model User {
   reviews         Review[]
   reviewLikes     ReviewLike[]
   savedNovels     SavedNovel[]
+  unlockedChapters UnlockedChapter[]
+  unlockedVolumes  UnlockedVolume[]
+  coinHistory     CoinHistory[]
+  subscriptionHistory SubscriptionHistory[]
+  publishedNovels Webnovel[]        @relation("PublishedNovels")
+  activityLogs    ActivityLog[]
 }
 
 model Webnovel {
@@ -46,11 +56,15 @@ model Webnovel {
   translator        String?
   summary           String
   thumbnail         String
+  genres            String?
   novelType         String             @default("webnovel")
   status            String             @default("ongoing")
   translationStatus String             @default("ongoing")
   totalChapters     Int                @default(0)
   totalVolumes      Int                @default(0)
+  hidden            Boolean            @default(false)
+  hiddenReason      String?
+  publisherId       String?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   chapters          Chapter[]
@@ -60,6 +74,8 @@ model Webnovel {
   scheduledChapters ScheduledChapter[]
   reviews           Review[]
   savedNovels       SavedNovel[]
+  coinHistory       CoinHistory[]
+  publisher         User?              @relation("PublishedNovels", fields: [publisherId], references: [id], onDelete: SetNull)
 }
 
 model Volume {
@@ -71,11 +87,14 @@ model Volume {
   content        String          @default("")
   contentImages  String          @default("[]")
   images         String          @default("[]")
+  isPaid         Boolean         @default(false)
+  coinCost       Int             @default(0)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   novel          Webnovel        @relation(fields: [novelId], references: [id], onDelete: Cascade)
   comments       Comment[]
   chapters       VolumeChapter[]
+  unlockedBy     UnlockedVolume[]
 
   @@unique([novelId, volumeNumber])
 }
@@ -89,11 +108,15 @@ model VolumeChapter {
   contentImages  String            @default("[]")
   images         String            @default("[]")
   viewCount      Int               @default(0)
+  isPaid         Boolean           @default(false)
+  coinCost       Int               @default(0)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   volume         Volume            @relation(fields: [volumeId], references: [id], onDelete: Cascade)
   readingProgress ReadingProgress[]
   reports        Report[]
+  unlockedBy     UnlockedChapter[]
+  coinHistory    CoinHistory[]
 
   @@unique([volumeId, chapterNumber])
 }
@@ -106,12 +129,16 @@ model Chapter {
   content         String
   originalContent String?
   viewCount       Int               @default(0)
+  isPaid          Boolean           @default(false)
+  coinCost        Int               @default(0)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   novel           Webnovel          @relation(fields: [novelId], references: [id], onDelete: Cascade)
   comments        Comment[]
   readingProgress ReadingProgress[]
   reports         Report[]
+  unlockedBy      UnlockedChapter[]
+  coinHistory     CoinHistory[]
 
   @@unique([novelId, chapterNumber])
 }
@@ -269,4 +296,90 @@ model SavedNovel {
   @@unique([userId, novelId])
   @@index([userId])
   @@index([novelId])
+}
+
+model UnlockedChapter {
+  id              String   @id @default(cuid())
+  userId          String
+  chapterId       String?
+  volumeChapterId String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter         Chapter? @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  volumeChapter   VolumeChapter? @relation(fields: [volumeChapterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chapterId])
+  @@unique([userId, volumeChapterId])
+  @@index([userId])
+  @@index([chapterId])
+  @@index([volumeChapterId])
+}
+
+model UnlockedVolume {
+  id        String   @id @default(cuid())
+  userId    String
+  volumeId  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  volume    Volume   @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, volumeId])
+  @@index([userId])
+  @@index([volumeId])
+}
+
+model CoinHistory {
+  id              String   @id @default(cuid())
+  userId          String
+  amount          Int
+  balance         Int
+  type            String   // "topup" | "unlock"
+  description     String?
+  novelId         String?
+  chapterId       String?
+  volumeChapterId String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  novel           Webnovel? @relation(fields: [novelId], references: [id], onDelete: SetNull)
+  chapter         Chapter?  @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  volumeChapter   VolumeChapter? @relation(fields: [volumeChapterId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([novelId])
+  @@index([chapterId])
+  @@index([volumeChapterId])
+}
+
+model SubscriptionHistory {
+  id              String   @id @default(cuid())
+  userId          String
+  plan            String   // "simple" | "medium"
+  action          String   // "granted" | "revoked" | "expired"
+  grantedBy       String?  // admin user id who performed the action
+  durationMinutes Int?     // how long the subscription was granted for
+  coinsGranted    Int?     // coins given with the subscription
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String   // "profile_update", "role_change", "restriction", "chapter_unlock", "topup", etc.
+  entityType  String?  // "user", "chapter", "novel", etc.
+  entityId    String?
+  oldValue    String?  // JSON string of old values
+  newValue    String?  // JSON string of new values
+  description String?
+  performedBy String?  // admin user id who performed the action
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
 }

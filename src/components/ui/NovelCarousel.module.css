@@ -1,0 +1,125 @@
+.container {
+  margin-bottom: 2.5rem;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.title svg {
+  color: var(--primary);
+}
+
+.wrapper {
+  position: relative;
+}
+
+.scroller {
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.grid {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.item {
+  flex: 0 0 calc(23.5% - 1.125rem);
+  min-width: calc(23.5% - 1.125rem);
+}
+
+.button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.button:hover {
+  background: var(--surface-hover);
+}
+
+.buttonLeft {
+  left: -20px;
+}
+
+.buttonRight {
+  right: -20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.header .title {
+  margin-bottom: 0;
+}
+
+.viewMore {
+  font-size: 0.875rem;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.viewMore:hover {
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  .container {
+    margin-bottom: 2rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .grid {
+    gap: 0.5rem;
+  }
+
+  .item {
+    flex: 0 0 30%;
+    min-width: 30%;
+  }
+
+  .button {
+    display: none;
+  }
+
+  .viewMore {
+    font-size: 0.8125rem;
+  }
+}

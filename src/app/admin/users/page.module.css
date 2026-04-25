@@ -153,6 +153,32 @@
   font-weight: 500;
 }
 
+.statusCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.planBadge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.simplePlan {
+  background: #3b82f6;
+  color: white;
+}
+
+.mediumPlan {
+  background: #8b5cf6;
+  color: white;
+}
+
 .restrictedBadge {
   background: #ef4444;
   color: white;
@@ -229,6 +255,115 @@
 .deleteButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.notifyAllButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notifyAllButton:hover {
+  background: #2563eb;
+}
+
+.notifyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.5rem;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notifyButton:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.actionMenuWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.menuButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.5rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.menuButton:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.actionMenu {
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 10000;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: var(--background);
+}
+
+.menuItem:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.menuItemDanger {
+  color: #ef4444;
+}
+
+.menuItemDanger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .empty,
@@ -432,6 +567,11 @@
   .deleteButton {
     padding: 0.375rem 0.625rem;
     font-size: 0.6875rem;
+  }
+
+  .menuItem {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
   }
 
   .pagination {

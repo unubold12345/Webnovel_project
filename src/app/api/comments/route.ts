@@ -1,6 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { decode } from "@auth/core/jwt";
+
+const SESSION_COOKIE_NAME = "authjs.session-token";
+
+async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
+  // First try NextAuth session
+  const session = await auth();
+  if (session?.user?.id) {
+    return session.user.id;
+  }
+
+  // Then try mobile Bearer token
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  if (token) {
+    try {
+      const decoded = await decode({
+        token,
+        secret: process.env.AUTH_SECRET!,
+        salt: SESSION_COOKIE_NAME,
+      });
+
+      if (decoded?.sub) {
+        return decoded.sub as string;
+      }
+    } catch {
+      // Invalid token
+    }
+  }
+
+  return null;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,7 +47,7 @@ export async function GET(req: NextRequest) {
     const limit = 10;
     const offset = (page - 1) * limit;
 
-    const [rootCommentsForPagination, allComments, totalCount] = await Promise.all([
+    const [rootCommentsForPagination, allComments, totalCount, novelData] = await Promise.all([
       db.comment.findMany({
         where: {
           novelId: novelId || null,
@@ -64,6 +97,12 @@ export async function GET(req: NextRequest) {
           parentId: null,
         },
       }),
+      novelId
+        ? db.webnovel.findUnique({
+            where: { id: novelId },
+            select: { publisherId: true },
+          })
+        : Promise.resolve(null),
     ]);
 
     const rootCommentIds = new Set(rootCommentsForPagination.map(c => c.id));
@@ -172,6 +211,7 @@ export async function GET(req: NextRequest) {
       currentPage: page,
       totalCount,
       isAdmin: isAdminOrMod,
+      publisherId: novelData?.publisherId || null,
     });
   } catch (error) {
     console.error("Error fetching comments:", error);
@@ -184,8 +224,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(req);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -195,7 +235,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Content required" }, { status: 400 });
     }
 
-    const isAdminOrMod = session.user.role === "admin" || session.user.role === "moderator";
+    // Fetch user role for admin/moderator check
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    const isAdminOrMod = user?.role === "admin" || user?.role === "moderator";
 
     let parentComment = null;
     if (parentId) {
@@ -214,7 +259,7 @@ export async function POST(req: NextRequest) {
 
     const comment = await db.comment.create({
       data: {
-        userId: session.user.id,
+        userId: userId,
         novelId: novelId || null,
         chapterId: chapterId || null,
         volumeId: volumeId || null,
@@ -237,9 +282,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (parentComment && parentComment.userId !== session.user.id) {
+    if (parentComment && parentComment.userId !== userId) {
       const replier = await db.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: userId },
         select: { username: true },
       });
 

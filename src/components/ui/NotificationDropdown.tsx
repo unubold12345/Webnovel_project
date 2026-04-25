@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import styles from "./NotificationDropdown.module.css";
+import { useToast } from "@/components/ui/ToastContext";
 
 interface Notification {
   id: string;
@@ -17,9 +18,18 @@ export default function NotificationDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { addToast } = useToast();
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const isFirstFetchRef = useRef(true);
 
   useEffect(() => {
     fetchNotifications();
+    checkSubscriptionExpiry();
+    const interval = setInterval(() => {
+      fetchNotifications();
+      checkSubscriptionExpiry();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -37,9 +47,36 @@ export default function NotificationDropdown() {
     try {
       const res = await fetch("/api/notifications");
       if (res.ok) {
-        const data = await res.json();
+        const data: Notification[] = await res.json();
         setNotifications(data);
+
+        if (isFirstFetchRef.current) {
+          // Mark all existing notifications as seen on first load
+          data.forEach((n) => seenIdsRef.current.add(n.id));
+          isFirstFetchRef.current = false;
+        } else {
+          // Find new unread notifications
+          const newNotifications = data.filter(
+            (n) => !n.isRead && !seenIdsRef.current.has(n.id)
+          );
+          newNotifications.forEach((n) => {
+            seenIdsRef.current.add(n.id);
+            if (n.type === "topup") {
+              addToast(n.message, "success", 6000);
+            } else if (n.type === "subscription_expired") {
+              addToast(n.message, "warning", 8000);
+            } else {
+              addToast(n.message, "info", 5000);
+            }
+          });
+        }
       }
+    } catch {}
+  };
+
+  const checkSubscriptionExpiry = async () => {
+    try {
+      await fetch("/api/notifications/check-subscription", { method: "POST" });
     } catch {}
   };
 

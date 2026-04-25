@@ -1,16 +1,47 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { decode } from "@auth/core/jwt";
 
-export async function GET() {
+const SESSION_COOKIE_NAME = "authjs.session-token";
+
+async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
+  const session = await auth();
+  if (session?.user?.id) {
+    return session.user.id;
+  }
+
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  if (token) {
+    try {
+      const decoded = await decode({
+        token,
+        secret: process.env.AUTH_SECRET!,
+        salt: SESSION_COOKIE_NAME,
+      });
+
+      if (decoded?.sub) {
+        return decoded.sub as string;
+      }
+    } catch {
+      // Invalid token
+    }
+  }
+
+  return null;
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const savedNovels = await db.savedNovel.findMany({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       orderBy: { createdAt: "desc" },
       include: {
         novel: {
@@ -60,7 +91,7 @@ export async function GET() {
 
     // Fetch reading progress for each novel
     const readingProgress = await db.readingProgress.findMany({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       include: {
         chapter: {
           select: { id: true, chapterNumber: true, title: true },
@@ -164,10 +195,10 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(req);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -180,7 +211,7 @@ export async function POST(req: Request) {
     // Check if already saved
     const existing = await db.savedNovel.findUnique({
       where: {
-        userId_novelId: { userId: session.user.id, novelId },
+        userId_novelId: { userId: userId, novelId },
       },
     });
 
@@ -190,7 +221,7 @@ export async function POST(req: Request) {
 
     const savedNovel = await db.savedNovel.create({
       data: {
-        userId: session.user.id,
+        userId: userId,
         novelId,
         readingStatus: readingStatus || "plan_to_read",
       },
@@ -213,10 +244,10 @@ export async function POST(req: Request) {
   }
 }
 
-export async function PATCH(req: Request) {
+export async function PATCH(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(req);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -240,7 +271,7 @@ export async function PATCH(req: Request) {
 
     const updatedSavedNovel = await db.savedNovel.update({
       where: {
-        userId_novelId: { userId: session.user.id, novelId },
+        userId_novelId: { userId: userId, novelId },
       },
       data: {
         readingStatus,

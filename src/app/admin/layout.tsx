@@ -1,6 +1,5 @@
-import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminTabs from "./AdminTabs";
 import { ToastProvider } from "@/components/ui/ToastContext";
-import { Toast } from "@/components/ui/Toast";
 import { ToastContainer } from "./ToastContainer";
 import styles from "./layout.module.css";
 
@@ -12,7 +11,7 @@ export default function AdminLayout({
   return (
     <ToastProvider>
       <div className={styles.layout}>
-        <AdminSidebar />
+        <AdminTabs />
         <div className={styles.content}>{children}</div>
       </div>
       <ToastContainer />

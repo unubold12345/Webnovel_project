@@ -110,10 +110,21 @@
   color: white;
 }
 
+.chapterItem.locked {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.chapterItem.locked:hover {
+  background: rgba(245, 158, 11, 0.1);
+}
+
 .chapterNumber {
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
 }
 
 .chapterTitle {
@@ -125,6 +136,12 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   line-height: 1.3;
+}
+
+.chapterCost {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--warning);
 }
 
 .pagination {

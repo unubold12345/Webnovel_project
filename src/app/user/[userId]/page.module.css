@@ -66,6 +66,23 @@
   gap: 0.5rem;
 }
 
+.diamondBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  border-radius: 4px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.diamondBadge svg {
+  width: 14px;
+  height: 14px;
+}
+
 .userMeta {
   display: flex;
   align-items: center;
@@ -135,6 +152,14 @@
 .activeTab {
   color: var(--primary);
   border-bottom-color: var(--primary);
+}
+
+.tabLabelDesktop {
+  display: inline;
+}
+
+.tabLabelMobile {
+  display: none;
 }
 
 /* Section Styles */
@@ -919,14 +944,43 @@
   }
 
   .tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    border-bottom: none;
+  }
+
+  .tabsNav {
+    border-bottom: none;
   }
 
   .tab {
-    padding: 0.625rem 0.875rem;
+    padding: 0.625rem 0.5rem;
     font-size: 0.8125rem;
     white-space: nowrap;
+    text-align: center;
+    border-radius: 8px;
+    background: var(--surface-hover);
+    border-bottom: none;
+  }
+
+  .tab:hover {
+    background: var(--border);
+  }
+
+  .activeTab {
+    color: var(--primary);
+    background: rgba(79, 70, 229, 0.12);
+    border-bottom: none;
+    box-shadow: inset 0 -2px 0 var(--primary);
+  }
+
+  .tabLabelDesktop {
+    display: none;
+  }
+
+  .tabLabelMobile {
+    display: inline;
   }
 
   .profileRow {
@@ -1199,4 +1253,107 @@
 
 .setPasswordButton:hover {
   background: var(--primary-hover);
+}
+
+/* Terms Section */
+.termsSection {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.termsBox {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.03) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-left: 4px solid #8b5cf6;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.termsBoxAccepted {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.03) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-left: 4px solid #10b981;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.termsHeader {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.termsIcon {
+  width: 32px;
+  height: 32px;
+  color: #8b5cf6;
+  flex-shrink: 0;
+}
+
+.termsBoxAccepted .termsIcon {
+  color: #10b981;
+}
+
+.termsTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.25rem 0;
+}
+
+.termsText {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.termsContent {
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.termsContent h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.termsContent ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.termsContent li {
+  margin-bottom: 0.25rem;
+}
+
+.termsButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.termsButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.termsButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

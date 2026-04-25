@@ -36,6 +36,9 @@ export async function GET(req: NextRequest) {
           lastActiveAt: true,
           avatar: true,
           bio: true,
+          coins: true,
+          subscriptionPlan: true,
+          subscriptionExpiresAt: true,
           createdAt: true,
           _count: {
             select: {

@@ -48,31 +48,31 @@ function getReadingStatusConfig(status: ReadingStatus) {
   switch (status) {
     case "reading":
       return {
-        label: "Reading",
+        label: "Уншиж байна",
         className: libraryStyles.statusReading,
         icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
       };
     case "completed":
       return {
-        label: "Completed",
+        label: "Дуусгасан",
         className: libraryStyles.statusCompleted,
         icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
       };
     case "on_hold":
       return {
-        label: "On-hold",
+        label: "Түр зогсоосон",
         className: libraryStyles.statusOnHold,
         icon: "M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z",
       };
     case "dropped":
       return {
-        label: "Dropped",
+        label: "Орхисон",
         className: libraryStyles.statusDropped,
         icon: "M6 18L18 6M6 6l12 12",
       };
     default:
       return {
-        label: "Plan to read",
+        label: "Дараа унших",
         className: libraryStyles.statusPlanToRead,
         icon: "M12 6v6m0 0v6m0-6h6m-6 0H6",
       };
@@ -118,6 +118,25 @@ export default function LibraryPage() {
       }
     } catch (error) {
       console.error("Failed to remove from library:", error);
+    }
+  };
+
+  const handleChangeStatus = async (novelId: string, newStatus: ReadingStatus) => {
+    try {
+      const res = await fetch("/api/library", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ novelId, readingStatus: newStatus }),
+      });
+      if (res.ok) {
+        setLibrary((prev) =>
+          prev.map((item) =>
+            item.novelId === novelId ? { ...item, readingStatus: newStatus } : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Failed to change reading status:", error);
     }
   };
 
@@ -171,22 +190,17 @@ export default function LibraryPage() {
                   </div>
 
                   <div className={libraryStyles.colStatus}>
-                    <span className={`${libraryStyles.readingStatusBadge} ${statusConfig.className}`}>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d={statusConfig.icon} />
-                      </svg>
-                      {statusConfig.label}
-                    </span>
+                    <select
+                      value={item.readingStatus}
+                      onChange={(e) => handleChangeStatus(item.novelId, e.target.value as ReadingStatus)}
+                      className={`${libraryStyles.statusSelect} ${statusConfig.className}`}
+                    >
+                      <option value="reading">Уншиж байна</option>
+                      <option value="completed">Дуусгасан</option>
+                      <option value="on_hold">Түр зогсоосон</option>
+                      <option value="plan_to_read">Дараа унших</option>
+                      <option value="dropped">Орхисон</option>
+                    </select>
                   </div>
 
                   <div className={libraryStyles.colLastRead}>

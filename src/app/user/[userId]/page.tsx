@@ -8,7 +8,7 @@ import styles from "./page.module.css";
 
 export default function UserProfilePage() {
   const user = useUserProfile();
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const userId = user?.id ?? "";
   const isOwner = session?.user?.id === userId;
   
@@ -16,6 +16,8 @@ export default function UserProfilePage() {
   const [verificationMessage, setVerificationMessage] = useState("");
   const [verificationError, setVerificationError] = useState("");
   const [devVerificationUrl, setDevVerificationUrl] = useState("");
+  const [termsLoading, setTermsLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(!!user?.acceptedTermsAt);
 
   if (!user) {
     return (
@@ -49,6 +51,21 @@ export default function UserProfilePage() {
       setVerificationError(data.error || "Имэйл илгээхэд алдаа гарлаа.");
     }
     setVerificationLoading(false);
+  };
+
+  const handleAcceptTerms = async () => {
+    setTermsLoading(true);
+    const res = await fetch("/api/user/accept-terms", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (res.ok) {
+      setTermsAccepted(true);
+      await update();
+    }
+    setTermsLoading(false);
   };
 
   return (
@@ -181,6 +198,62 @@ export default function UserProfilePage() {
                   Нууц үг тохируулах
                 </Link>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Terms & Conditions for Publishing */}
+        {isOwner && !termsAccepted && (
+          <div className={styles.termsSection}>
+            <div className={styles.termsBox}>
+              <div className={styles.termsHeader}>
+                <svg className={styles.termsIcon} viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </svg>
+                <div>
+                  <h3 className={styles.termsTitle}>Нийтлэх эрх авах</h3>
+                  <p className={styles.termsText}>
+                    Өөрийн зохиол нийтлэхийн тулд та үйлчилгээний нөхцөлийг зөвшөөрөх шаардлагатай.
+                  </p>
+                </div>
+              </div>
+              <div className={styles.termsContent}>
+                <h4>Үйлчилгээний нөхцөл</h4>
+                <ul>
+                  <li>Та зөвхөн өөрийн бүтээсэн, эсвэл нийтлэх эрхтэй контентыг оруулах ёстой.</li>
+                  <li>Бусдын эрхийг зөрчсөн, хууль бус агуулгыг оруулахыг хориглоно.</li>
+                  <li>Платформын дүрмийг зөрчсөн тохиолдолд таны бүртгэл хязгаарлагдах болно.</li>
+                  <li>Таны нийтлэсэн контент платформ дээр харагдах бөгөөд админ удирдлага хяналт тавина.</li>
+                </ul>
+              </div>
+              <button 
+                onClick={handleAcceptTerms}
+                className={styles.termsButton}
+                disabled={termsLoading}
+              >
+                {termsLoading ? "Хадгалж байна..." : "Зөвшөөрч, нийтлэх эрх авах"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isOwner && termsAccepted && (
+          <div className={styles.termsSection}>
+            <div className={styles.termsBoxAccepted}>
+              <div className={styles.termsHeader}>
+                <svg className={styles.termsIcon} viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+                <div>
+                  <h3 className={styles.termsTitle}>Нийтлэх эрхтэй</h3>
+                  <p className={styles.termsText}>
+                    Та үйлчилгээний нөхцөлийг зөвшөөрсөн бөгөөд өөрийн зохиол нийтлэх боломжтой.
+                  </p>
+                </div>
+              </div>
+              <Link href={`/user/${userId}/novels`} className={styles.termsButton}>
+                Миний зохиолууд руу очих
+              </Link>
             </div>
           </div>
         )}

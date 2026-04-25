@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./page.module.css";
 import ScheduleChapterModal from "@/components/ui/ScheduleChapterModal";
+import UnlockModal from "@/components/ui/UnlockModal";
 
 interface ScheduledChapter {
   id: string;
@@ -18,12 +19,17 @@ interface Chapter {
   chapterNumber: number;
   title: string;
   viewCount: number;
+  isPaid: boolean;
+  coinCost: number;
 }
 
 interface VolumeChapter {
   id: string;
   chapterNumber: number;
   title: string;
+  viewCount: number;
+  isPaid: boolean;
+  coinCost: number;
 }
 
 interface Volume {
@@ -31,6 +37,8 @@ interface Volume {
   volumeNumber: number;
   title: string;
   thumbnail: string | null;
+  isPaid: boolean;
+  coinCost: number;
   chapters: VolumeChapter[];
 }
 
@@ -43,6 +51,11 @@ interface NovelDetailsClientProps {
   volumes: Volume[];
   isAdmin: boolean;
   isModerator: boolean;
+  unlockedRegular: Set<string>;
+  unlockedVolume: Set<string>;
+  unlockedVolumes: Set<string>;
+  volumeRemainingCosts: Record<string, number>;
+  isLoggedIn: boolean;
 }
 
 export default function NovelDetailsClient({
@@ -54,15 +67,106 @@ export default function NovelDetailsClient({
   volumes,
   isAdmin,
   isModerator,
+  unlockedRegular,
+  unlockedVolume,
+  unlockedVolumes,
+  volumeRemainingCosts,
+  isLoggedIn,
 }: NovelDetailsClientProps) {
   const [scheduledChapters, setScheduledChapters] = useState(initialScheduledChapters);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showVolumeModal, setShowVolumeModal] = useState(false);
   const [selectedVolume, setSelectedVolume] = useState<Volume | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [unlockModal, setUnlockModal] = useState<{ open: boolean; title: string; coinCost: number; type: "chapter" | "volumeChapter" | "volume"; id: string; redirectUrl?: string } | null>(null);
+  const [localUnlockedRegular, setLocalUnlockedRegular] = useState<Set<string>>(unlockedRegular);
+  const [localUnlockedVolume, setLocalUnlockedVolume] = useState<Set<string>>(unlockedVolume);
+  const [localUnlockedVolumes, setLocalUnlockedVolumes] = useState<Set<string>>(unlockedVolumes);
 
   const existingChapterNumbers = chapters.map((c) => c.chapterNumber);
   const canManage = isAdmin || isModerator;
+
+  const handleUnlock = async () => {
+    if (!unlockModal) return { alreadyUnlocked: false };
+    const res = await fetch("/api/chapters/unlock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: unlockModal.type, id: unlockModal.id }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Тайлахад алдаа гарлаа");
+    }
+    if (data.alreadyUnlocked) {
+      return { alreadyUnlocked: true };
+    }
+    // Update local state immediately
+    if (unlockModal.type === "chapter") {
+      setLocalUnlockedRegular((prev) => new Set([...prev, unlockModal.id]));
+    } else if (unlockModal.type === "volumeChapter") {
+      setLocalUnlockedVolume((prev) => new Set([...prev, unlockModal.id]));
+    } else if (unlockModal.type === "volume") {
+      setLocalUnlockedVolumes((prev) => new Set([...prev, unlockModal.id]));
+    }
+    return { alreadyUnlocked: false };
+  };
+
+  const isChapterLocked = (chapter: Chapter | VolumeChapter, type: "chapter" | "volumeChapter", volume?: { id: string; isPaid: boolean; coinCost: number }) => {
+    if (type === "volumeChapter" && volume) {
+      if (localUnlockedVolumes.has(volume.id)) return false;
+      if (volume.isPaid) {
+        // Chapter marked as free inside paid volume
+        if (!chapter.isPaid) return false;
+        // If remaining cost is 0 (already paid enough via individual chapters), treat as unlocked
+        if ((volumeRemainingCosts[volume.id] ?? volume.coinCost) === 0) return false;
+        // Honor previously unlocked individual chapters even after volume becomes paid
+        if (localUnlockedVolume.has(chapter.id)) return false;
+        return true;
+      }
+    }
+    if (!chapter.isPaid) return false;
+    if (!isLoggedIn) return true;
+    const set = type === "chapter" ? localUnlockedRegular : localUnlockedVolume;
+    return !set.has(chapter.id);
+  };
+
+  const handleChapterClick = (e: React.MouseEvent, chapter: Chapter | VolumeChapter, type: "chapter" | "volumeChapter", volumeNum?: number, volume?: { id: string; isPaid: boolean; coinCost: number; title: string }) => {
+    if (isChapterLocked(chapter, type, volume)) {
+      if (canManage) {
+        // Admins and moderators can navigate through locked chapters
+        return;
+      }
+      e.preventDefault();
+      if (!isLoggedIn) {
+        window.location.href = "/auth/login";
+        return;
+      }
+      // If volume is paid and not unlocked, show volume unlock modal
+      if (type === "volumeChapter" && volume && volume.isPaid && !localUnlockedVolumes.has(volume.id)) {
+        setUnlockModal({
+          open: true,
+          title: volume.title,
+          coinCost: volume.coinCost,
+          type: "volume",
+          id: volume.id,
+        });
+        return;
+      }
+      const redirectUrl = type === "chapter"
+        ? `/novels/${novelSlug}/chapters/${chapter.chapterNumber}`
+        : `/novels/${novelSlug}/volumes/${volumeNum}/chapters/${chapter.chapterNumber}`;
+      setUnlockModal({
+        open: true,
+        title: chapter.title,
+        coinCost: chapter.coinCost,
+        type,
+        id: chapter.id,
+        redirectUrl,
+      });
+    }
+  };
+
+
 
   const handleDeleteScheduled = async (chapterNumber: number) => {
     setDeletingId(String(chapterNumber));
@@ -241,6 +345,16 @@ export default function NovelDetailsClient({
                   <span className={styles.volumeTitle}>{volume.title}</span>
                   <span className={styles.volumeChapterCount}>
                     {volume.chapters.length} бүлэг
+                    {volume.isPaid && !localUnlockedVolumes.has(volume.id) && (
+                      <span style={{ marginLeft: "0.5rem", color: "var(--warning)", fontWeight: 600 }}>
+                        ({(volumeRemainingCosts[volume.id] ?? volume.coinCost)} зоос)
+                      </span>
+                    )}
+                    {volume.isPaid && localUnlockedVolumes.has(volume.id) && (
+                      <span style={{ marginLeft: "0.5rem", color: "var(--success)", fontWeight: 600 }}>
+                        (Тайлсан)
+                      </span>
+                    )}
                   </span>
                 </div>
               </button>
@@ -251,16 +365,33 @@ export default function NovelDetailsClient({
         <div className={styles.chapters}>
           <h2 className={styles.sectionTitle}>Бүлгүүд</h2>
           <div className={styles.chapterList}>
-            {reversedChapters.map((chapter) => (
-              <Link
-                key={chapter.id}
-                href={`/novels/${novelSlug}/chapters/${chapter.chapterNumber}`}
-                className={styles.chapterItem}
-              >
-                <span>Бүлэг {chapter.chapterNumber}</span>
-                <span>{chapter.title}</span>
-              </Link>
-            ))}
+            {reversedChapters.map((chapter) => {
+              const locked = isChapterLocked(chapter, "chapter");
+              return (
+                <Link
+                  key={chapter.id}
+                  href={`/novels/${novelSlug}/chapters/${chapter.chapterNumber}`}
+                  className={`${styles.chapterItem} ${locked ? styles.lockedChapterItem : ""}`}
+                  onClick={(e) => handleChapterClick(e, chapter, "chapter")}
+                >
+                  <span>Бүлэг {chapter.chapterNumber}</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                    {locked && (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--warning)" }}>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                    )}
+                    {chapter.title}
+                    {locked && (
+                      <span style={{ fontSize: "0.6875rem", color: "var(--warning)", fontWeight: 600, whiteSpace: "nowrap" }}>
+                        {chapter.coinCost} зоос
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
@@ -271,6 +402,17 @@ export default function NovelDetailsClient({
           existingChapterNumbers={existingChapterNumbers}
           onClose={() => setShowScheduleModal(false)}
           onSuccess={handleScheduleSuccess}
+        />
+      )}
+
+      {/* Unlock Modal */}
+      {unlockModal?.open && (
+        <UnlockModal
+          title={unlockModal.title}
+          coinCost={unlockModal.coinCost}
+          onUnlock={handleUnlock}
+          onClose={() => setUnlockModal(null)}
+          redirectUrl={unlockModal.redirectUrl}
         />
       )}
 
@@ -296,23 +438,71 @@ export default function NovelDetailsClient({
               </button>
             </div>
             <div className={styles.modalContent}>
+              {selectedVolume.isPaid && !canManage && !localUnlockedVolumes.has(selectedVolume.id) && (
+                <div className={styles.volumeUnlockBanner}>
+                  <span>Энэ боть төлбөртэй. Бүх бүлгийг нээнэ үү.</span>
+                  <button
+                    onClick={() => {
+                      if (!isLoggedIn) {
+                        window.location.href = "/auth/login";
+                        return;
+                      }
+                      const remaining = volumeRemainingCosts[selectedVolume.id] ?? selectedVolume.coinCost;
+                      setUnlockModal({
+                        open: true,
+                        title: selectedVolume.title,
+                        coinCost: remaining,
+                        type: "volume",
+                        id: selectedVolume.id,
+                      });
+                    }}
+                    className={styles.volumeUnlockButton}
+                  >
+                    {(volumeRemainingCosts[selectedVolume.id] ?? selectedVolume.coinCost)} зоосоор тайлах
+                  </button>
+                </div>
+              )}
               {selectedVolume.chapters.length === 0 ? (
                 <p className={styles.empty}>Энэ ботьд одоогоор бүлэг байхгүй.</p>
               ) : (
                 <div className={styles.volumeChapterList}>
                   {selectedVolume.chapters
                     .sort((a, b) => b.chapterNumber - a.chapterNumber)
-                    .map((chapter) => (
-                      <Link
-                        key={chapter.id}
-                        href={`/novels/${novelSlug}/volumes/${selectedVolume.volumeNumber}/chapters/${chapter.chapterNumber}`}
-                        className={styles.volumeChapterItem}
-                        onClick={() => setShowVolumeModal(false)}
-                      >
-                        <span>Бүлэг {chapter.chapterNumber}</span>
-                        <span>{chapter.title}</span>
-                      </Link>
-                    ))}
+                    .map((chapter) => {
+                      const locked = isChapterLocked(chapter, "volumeChapter", selectedVolume);
+                      return (
+                        <Link
+                          key={chapter.id}
+                          href={`/novels/${novelSlug}/volumes/${selectedVolume.volumeNumber}/chapters/${chapter.chapterNumber}`}
+                          className={`${styles.volumeChapterItem} ${locked ? styles.lockedChapterItem : ""}`}
+                          onClick={(e) => {
+                            if (locked && !canManage) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleChapterClick(e, chapter, "volumeChapter", selectedVolume.volumeNumber, selectedVolume);
+                            } else {
+                              setShowVolumeModal(false);
+                            }
+                          }}
+                        >
+                          <span>Бүлэг {chapter.chapterNumber}</span>
+                          <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                            {locked && (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--warning)" }}>
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                              </svg>
+                            )}
+                            {chapter.title}
+                            {locked && (
+                              <span style={{ fontSize: "0.6875rem", color: "var(--warning)", fontWeight: 600, whiteSpace: "nowrap" }}>
+                                {chapter.coinCost} зоос
+                              </span>
+                            )}
+                          </span>
+                        </Link>
+                      );
+                    })}
                 </div>
               )}
             </div>
@@ -320,7 +510,24 @@ export default function NovelDetailsClient({
               <Link
                 href={`/novels/${novelSlug}/volumes/${selectedVolume.volumeNumber}/chapters/1`}
                 className={styles.readFirstButton}
-                onClick={() => setShowVolumeModal(false)}
+                onClick={(e) => {
+                  if (selectedVolume.isPaid && !canManage && !localUnlockedVolumes.has(selectedVolume.id)) {
+                    e.preventDefault();
+                    if (!isLoggedIn) {
+                      window.location.href = "/auth/login";
+                      return;
+                    }
+                    setUnlockModal({
+                      open: true,
+                      title: selectedVolume.title,
+                      coinCost: selectedVolume.coinCost,
+                      type: "volume",
+                      id: selectedVolume.id,
+                    });
+                    return;
+                  }
+                  setShowVolumeModal(false);
+                }}
               >
                 Эхнээс нь унших
               </Link>

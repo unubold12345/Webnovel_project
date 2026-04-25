@@ -18,6 +18,9 @@ export async function GET(
         bio: true,
         role: true,
         emailVerified: true,
+        subscriptionPlan: true,
+        subscriptionExpiresAt: true,
+        acceptedTermsAt: true,
         createdAt: true,
         password: true,
         _count: {
@@ -70,6 +73,9 @@ export async function GET(
       bio: user.bio,
       role: user.role,
       emailVerified: user.emailVerified,
+      subscriptionPlan: user.subscriptionPlan,
+      subscriptionExpiresAt: user.subscriptionExpiresAt?.toISOString() || null,
+      acceptedTermsAt: user.acceptedTermsAt?.toISOString() || null,
       createdAt: user.createdAt,
       needsPassword: !hasPassword,
       stats: {

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import DeleteChapterButton from "@/components/admin/DeleteChapterButton";
+import ChapterGridClient from "@/components/admin/ChapterGridClient";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -47,61 +47,45 @@ export default async function ChaptersPage({
     );
   }
 
+  const totalViews = novel.chapters.reduce((sum, c) => sum + c.viewCount, 0);
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.titleRow}>
-          <h1 className={styles.title}>{novel.title} - Бүлэг</h1>
+        <div>
+          <h1 className={styles.title}>{novel.title}</h1>
+          <p className={styles.subtitle}>Бүлэг — Нийт {novel.chapters.length} бүлэг, {totalViews.toLocaleString()} үзэлт</p>
+        </div>
+        <div className={styles.headerActions}>
           <Link href={`/novels/${novel.slug}`} className={styles.viewButton} target="_blank">
-            Webnovel харах
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Харах
+          </Link>
+          <Link href={`/admin/novels/${novelId}/chapters/new`} className={styles.addButton}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Бүлэг нэмэх
           </Link>
         </div>
-        <Link href={`/admin/novels/${novelId}/chapters/new`} className={styles.addButton}>
-          Бүлэг нэмэх
-        </Link>
       </div>
-      <div className={styles.list}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Гарчиг</th>
-              <th>Үзэлт</th>
-              <th>Үйлдэл</th>
-            </tr>
-          </thead>
-          <tbody>
-            {novel.chapters.map((chapter) => (
-              <tr key={chapter.id}>
-                <td data-label="#">{chapter.chapterNumber}</td>
-                <td data-label="Title">{chapter.title}</td>
-                <td data-label="Views">{chapter.viewCount}</td>
-                <td data-label="Actions">
-                  <Link
-                    href={`/novels/${novel.slug}/chapters/${chapter.chapterNumber}`}
-                    className={styles.actionButton}
-                    target="_blank"
-                  >
-                    Харах
-                  </Link>
-                  <Link
-                    href={`/admin/novels/${novelId}/chapters/${chapter.id}/edit`}
-                    className={styles.actionButton}
-                  >
-                    Засах
-                  </Link>
-                  <DeleteChapterButton
-                    novelId={novelId}
-                    chapterId={chapter.id}
-                    chapterTitle={chapter.title}
-                    chapterNumber={chapter.chapterNumber}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+      {novel.chapters.length === 0 ? (
+        <div className={styles.empty}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          <p>Одоогоор бүлэг байхгүй.</p>
+          <Link href={`/admin/novels/${novelId}/chapters/new`} className={styles.emptyCta}>Эхний бүлгийг нэмэх</Link>
+        </div>
+      ) : (
+        <ChapterGridClient
+          chapters={novel.chapters.map((c) => ({
+            id: c.id,
+            chapterNumber: c.chapterNumber,
+            title: c.title,
+            viewCount: c.viewCount,
+          }))}
+          novelId={novelId}
+          novelSlug={novel.slug}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,513 @@
+.container {
+  max-width: 1400px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.novelSelect {
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.select {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.bulkActions {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.bulkRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.bulkField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.bulkField .label {
+  margin-bottom: 0;
+}
+
+.coinInput {
+  width: 120px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: var(--background);
+  color: var(--text);
+}
+
+.coinInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.applyButton {
+  padding: 0.625rem 1.25rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.applyButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.applyButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chapterList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.selectAllRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.selectedCount {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.volumeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.volumeSelectLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.volumeSelectLabel:hover {
+  color: var(--text);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.volumeInfoHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.volumePricing {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.volumePricingBtn {
+  padding: 0.25rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.volumePricingBtn:hover {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modalTitle {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.modalClose:hover {
+  background: var(--surface-hover);
+}
+
+.modalBody {
+  padding: 1.25rem;
+}
+
+.modalField {
+  margin-top: 0.75rem;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.cancelButton {
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancelButton:hover {
+  background: var(--surface-hover);
+}
+
+.chapterCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chapterCard:hover {
+  border-color: var(--primary);
+}
+
+.chapterCard.selected {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+}
+
+.chapterCard.paid {
+  border-left: 3px solid var(--warning);
+}
+
+.cardCheckbox {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.125rem;
+  cursor: pointer;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.cardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.chapterNumber {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.chapterTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chapterMeta {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.125rem;
+}
+
+.paidBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+}
+
+.freeBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+}
+
+.loading,
+.empty {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .header {
+    margin-bottom: 1rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .novelSelect {
+    margin-bottom: 1rem;
+  }
+
+  .select {
+    max-width: 100%;
+  }
+
+  .bulkActions {
+    padding: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .bulkRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .coinInput {
+    width: 100%;
+  }
+
+  .applyButton {
+    width: 100%;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chapterCard {
+    padding: 0.75rem;
+  }
+
+  .loading,
+  .empty {
+    padding: 2rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Paid volume free chapter list */
+.paidVolumeChapters {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.paidVolumeHint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.freeChapterList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.freeChapterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.freeChapterRow:hover {
+  border-color: var(--primary);
+}
+
+.freeChapterRowFree {
+  border-left: 3px solid var(--success);
+  background: color-mix(in srgb, var(--success) 5%, var(--background));
+}
+
+.freeChapterInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.freeChapterToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.freeChapterToggle:hover {
+  color: var(--text);
+}
+
+.paidVolumeActions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}

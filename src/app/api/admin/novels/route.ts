@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
         translator: data.translator || null,
         summary: data.summary,
         thumbnail: data.thumbnail,
+        genres: data.genres || null,
         novelType: data.novelType || "webnovel",
         status: data.status,
         translationStatus: data.translationStatus || "ongoing",

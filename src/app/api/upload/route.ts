@@ -10,6 +10,14 @@ cloudinary.config({
 
 export async function POST(req: NextRequest) {
   try {
+    // Check Cloudinary config
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      return NextResponse.json(
+        { error: "Image upload is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file." },
+        { status: 500 }
+      );
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 

@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import UnlockModal from "./UnlockModal";
 import styles from "./ChapterListModal.module.css";
 
 interface Chapter {
   id: string;
   chapterNumber: number;
   title: string;
+  isPaid?: boolean;
+  coinCost?: number;
 }
 
 interface ChapterListModalProps {
@@ -15,11 +18,18 @@ interface ChapterListModalProps {
   currentChapter: number;
   novelSlug: string;
   volumeNumber?: number;
+  unlockedRegular?: Set<string>;
+  unlockedVolume?: Set<string>;
+  userId?: string | null;
+  canManage?: boolean;
+  volumeUnlocked?: boolean;
 }
 
-export default function ChapterListModal({ chapters, currentChapter, novelSlug, volumeNumber }: ChapterListModalProps) {
+export default function ChapterListModal({ chapters, currentChapter, novelSlug, volumeNumber, unlockedRegular, unlockedVolume, userId, canManage = false, volumeUnlocked = false }: ChapterListModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [unlockModal, setUnlockModal] = useState<{ title: string; coinCost: number; type: "chapter" | "volumeChapter"; id: string; redirectUrl: string } | null>(null);
+  const [justUnlockedIds, setJustUnlockedIds] = useState<Set<string>>(new Set());
   const chaptersPerPage = 50;
 
   const currentChapterData = chapters.find(c => c.chapterNumber === currentChapter);
@@ -52,6 +62,38 @@ export default function ChapterListModal({ chapters, currentChapter, novelSlug, 
     setCurrentPage(1);
   };
 
+  const isChapterLocked = (chapter: Chapter) => {
+    if (!chapter.isPaid) return false;
+    if (volumeUnlocked) return false;
+    if (!userId) return true;
+    const set = volumeNumber ? unlockedVolume : unlockedRegular;
+    return !(set?.has(chapter.id) || justUnlockedIds.has(chapter.id));
+  };
+
+  const handleChapterClick = (e: React.MouseEvent, chapter: Chapter) => {
+    if (!isChapterLocked(chapter)) return;
+    if (canManage) {
+      // Admins and moderators can navigate through locked chapters
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    if (!userId) {
+      window.location.href = "/auth/login";
+      return;
+    }
+    const redirectUrl = volumeNumber
+      ? `/novels/${novelSlug}/volumes/${volumeNumber}/chapters/${chapter.chapterNumber}`
+      : `/novels/${novelSlug}/chapters/${chapter.chapterNumber}`;
+    setUnlockModal({
+      title: chapter.title,
+      coinCost: chapter.coinCost ?? 0,
+      type: volumeNumber ? "volumeChapter" : "chapter",
+      id: chapter.id,
+      redirectUrl,
+    });
+  };
+
   return (
     <>
       <button onClick={() => setIsOpen(true)} className={styles.listButton}>
@@ -81,20 +123,37 @@ export default function ChapterListModal({ chapters, currentChapter, novelSlug, 
               </button>
             </div>
             <div className={styles.chapterGrid}>
-              {currentChapters.map((chapter) => (
-                <Link
-                  key={chapter.id}
-                  href={volumeNumber 
-                    ? `/novels/${novelSlug}/volumes/${volumeNumber}/chapters/${chapter.chapterNumber}`
-                    : `/novels/${novelSlug}/chapters/${chapter.chapterNumber}`
-                  }
-                  className={`${styles.chapterItem} ${chapter.chapterNumber === currentChapter ? styles.active : ""}`}
-                  onClick={closeModal}
-                >
-                  <span className={styles.chapterNumber}>{chapter.chapterNumber}-р бүлэг</span>
-                  <span className={styles.chapterTitle}>{chapter.title}</span>
-                </Link>
-              ))}
+              {currentChapters.map((chapter) => {
+                const locked = isChapterLocked(chapter);
+                return (
+                  <Link
+                    key={chapter.id}
+                    href={volumeNumber 
+                      ? `/novels/${novelSlug}/volumes/${volumeNumber}/chapters/${chapter.chapterNumber}`
+                      : `/novels/${novelSlug}/chapters/${chapter.chapterNumber}`
+                    }
+                    className={`${styles.chapterItem} ${chapter.chapterNumber === currentChapter ? styles.active : ""} ${locked ? styles.locked : ""}`}
+                    onClick={(e) => {
+                      handleChapterClick(e, chapter);
+                      if (!locked) closeModal();
+                    }}
+                  >
+                    <span className={styles.chapterNumber}>
+                      {locked && (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: "0.25rem", verticalAlign: "middle" }}>
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      )}
+                      {chapter.chapterNumber}-р бүлэг
+                    </span>
+                    <span className={styles.chapterTitle}>{chapter.title}</span>
+                    {locked && (
+                      <span className={styles.chapterCost}>{chapter.coinCost} зоос</span>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
             {totalPages > 1 && (
               <div className={styles.pagination}>
@@ -138,6 +197,30 @@ export default function ChapterListModal({ chapters, currentChapter, novelSlug, 
             )}
           </div>
         </div>
+      )}
+
+      {unlockModal && (
+        <UnlockModal
+          title={unlockModal.title}
+          coinCost={unlockModal.coinCost}
+          onUnlock={async () => {
+            const res = await fetch("/api/chapters/unlock", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: unlockModal.type, id: unlockModal.id }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+              throw new Error(data.error || "Тайлахад алдаа гарлаа");
+            }
+            if (!data.alreadyUnlocked) {
+              setJustUnlockedIds((prev) => new Set([...prev, unlockModal.id]));
+            }
+            return { alreadyUnlocked: data.alreadyUnlocked };
+          }}
+          onClose={() => setUnlockModal(null)}
+          redirectUrl={unlockModal.redirectUrl}
+        />
       )}
     </>
   );

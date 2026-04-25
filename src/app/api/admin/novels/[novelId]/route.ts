@@ -24,6 +24,7 @@ export async function PUT(
         translator: data.translator || null,
         summary: data.summary,
         thumbnail: data.thumbnail,
+        genres: data.genres || null,
         novelType: data.novelType,
         status: data.status,
         translationStatus: data.translationStatus,
@@ -36,6 +37,41 @@ export async function PUT(
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to update novel" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ novelId: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session || (session.user.role !== "admin" && session.user.role !== "moderator")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { novelId } = await params;
+    const { hidden, hiddenReason } = await req.json();
+
+    if (typeof hidden !== "boolean") {
+      return NextResponse.json({ error: "Invalid hidden value" }, { status: 400 });
+    }
+
+    const novel = await db.webnovel.update({
+      where: { id: novelId },
+      data: {
+        hidden,
+        hiddenReason: hidden ? hiddenReason || null : null,
+      },
+    });
+
+    return NextResponse.json(novel);
+  } catch (error) {
+    console.error("Error updating novel visibility:", error);
+    return NextResponse.json(
+      { error: "Failed to update novel visibility" },
       { status: 500 }
     );
   }

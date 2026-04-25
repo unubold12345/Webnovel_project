@@ -1,0 +1,32 @@
+.navButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.navButton:hover {
+  background: var(--surface-hover);
+}
+
+.navButtonDisabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  opacity: 0.5;
+  cursor: not-allowed;
+}

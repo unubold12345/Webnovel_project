@@ -1,0 +1,174 @@
+.container {
+  padding: 1.5rem 0;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: var(--text);
+}
+
+.loading,
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.income {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.expense {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.incomeText {
+  color: #22c55e;
+}
+
+.expenseText {
+  color: #ef4444;
+}
+
+.balance {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.description {
+  color: var(--text-secondary);
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novelCell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novelLink {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.novelLink:hover {
+  text-decoration: underline;
+}
+
+.chapterCell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chapterInfo {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.date {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.pageButton {
+  padding: 0.5rem 0.875rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.pageButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}

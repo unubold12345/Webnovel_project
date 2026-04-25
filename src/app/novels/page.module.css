@@ -1,0 +1,157 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+/* Genre filter */
+.genreSection {
+  margin-bottom: 1.5rem;
+}
+
+.genreTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text);
+}
+
+.genreList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.genrePill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.875rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.genrePill:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+}
+
+.genrePillActive {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.genrePillActive:hover {
+  color: #fff;
+  background: var(--primary-hover, var(--primary));
+  border-color: var(--primary-hover, var(--primary));
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.activeTab {
+  color: var(--primary);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
+}
+
+.cardWrapper {
+  min-width: 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 2rem 0.75rem;
+  }
+
+  .pageTitle {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .genreSection {
+    margin-bottom: 1rem;
+  }
+
+  .genrePill {
+    padding: 0.3125rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .tabs {
+    margin-bottom: 1.5rem;
+  }
+
+  .tab {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}

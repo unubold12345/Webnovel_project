@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useCallback, ReactNode } from "rea
 export interface ToastMessage {
   id: string;
   message: string;
-  type: "success" | "error" | "info";
+  type: "success" | "error" | "info" | "warning";
   duration?: number;
 }
 

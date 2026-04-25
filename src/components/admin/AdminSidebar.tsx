@@ -14,6 +14,15 @@ export default function AdminSidebar() {
         <Link href="/admin/users" className={styles.link}>
           Хэрэглэгчид
         </Link>
+        <Link href="/admin/topup" className={styles.link}>
+          Coin нэмэх
+        </Link>
+        <Link href="/admin/subscriptions" className={styles.link}>
+          Сарын захиалга
+        </Link>
+        <Link href="/admin/paid-chapters" className={styles.link}>
+          Төлбөртэй бүлэг
+        </Link>
         <Link href="/admin/reports" className={styles.link}>
           Мэдээллүүд
         </Link>

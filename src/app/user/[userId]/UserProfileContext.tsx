@@ -11,6 +11,9 @@ interface UserProfile {
   role: string;
   emailVerified: boolean;
   needsPassword: boolean;
+  subscriptionPlan: string | null;
+  subscriptionExpiresAt: string | null;
+  acceptedTermsAt: string | null;
   createdAt: string;
   stats?: {
     comments: {

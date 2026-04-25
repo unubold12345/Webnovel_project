@@ -1,0 +1,105 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 400px;
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.lockIcon {
+  color: var(--warning);
+  opacity: 0.9;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.description {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 400px;
+}
+
+.costBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.unlockButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 2rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  margin-top: 0.5rem;
+}
+
+.unlockButton:hover {
+  background: var(--primary-hover);
+}
+
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.success h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.success p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.readButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 2rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  margin-top: 0.5rem;
+}
+
+.readButton:hover {
+  background: var(--primary-hover);
+}

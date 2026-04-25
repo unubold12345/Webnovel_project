@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { getNovelViewCounts } from "@/lib/views";
-import WebnovelCard from "@/components/ui/WebnovelCard";
+import { getSiteSettings } from "@/lib/siteSettings";
+import NovelCarousel from "@/components/ui/NovelCarousel";
 import ContinueReading from "@/components/ui/ContinueReading";
 import RecentlyAddedChapters from "@/components/ui/RecentlyAddedChapters";
 import styles from "./page.module.css";
@@ -10,9 +11,11 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const session = await auth();
+  const settings = getSiteSettings();
 
   const [novels, viewCounts] = await Promise.all([
     db.webnovel.findMany({
+      where: { hidden: false },
       orderBy: { createdAt: "desc" },
     }),
     getNovelViewCounts(),
@@ -22,6 +25,10 @@ export default async function HomePage() {
     ...novel,
     totalViews: viewCounts.get(novel.id) || 0,
   }));
+
+  const mostViewedNovels = [...novelsWithViews]
+    .sort((a, b) => b.totalViews - a.totalViews)
+    .slice(0, 10);
 
   let continueReading: Array<{
     novel: { id: string; title: string; slug: string; thumbnail: string; novelType: string };
@@ -65,14 +72,13 @@ export default async function HomePage() {
     }));
   }
 
-  // Fetch recently added chapters (both regular and volume chapters)
   const [recentChapters, recentVolumeChapters] = await Promise.all([
     db.chapter.findMany({
       orderBy: { createdAt: "desc" },
       take: 15,
       include: {
         novel: {
-          select: { id: true, title: true, slug: true, thumbnail: true, novelType: true },
+          select: { id: true, title: true, slug: true, thumbnail: true, novelType: true, hidden: true },
         },
       },
     }),
@@ -86,7 +92,7 @@ export default async function HomePage() {
             volumeNumber: true, 
             title: true,
             novel: {
-              select: { id: true, title: true, slug: true, thumbnail: true, novelType: true },
+              select: { id: true, title: true, slug: true, thumbnail: true, novelType: true, hidden: true },
             },
           },
         },
@@ -94,14 +100,13 @@ export default async function HomePage() {
     }),
   ]);
 
-  // Combine and sort all chapters
   const allRecentChapters = [
-    ...recentChapters.map(ch => ({
+    ...recentChapters.filter(ch => !ch.novel.hidden).map(ch => ({
       ...ch,
       isVolumeChapter: false,
       volume: null,
     })),
-    ...recentVolumeChapters.map(vch => ({
+    ...recentVolumeChapters.filter(vch => !vch.volume.novel.hidden).map(vch => ({
       id: vch.id,
       chapterNumber: vch.chapterNumber,
       title: vch.title,
@@ -116,22 +121,37 @@ export default async function HomePage() {
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 15);
 
   return (
-    <div className={styles.container}>
-      {continueReading.length > 0 && <ContinueReading data={continueReading} />}
-      <h1 className={styles.title}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-        </svg>
-        Санал болгох
-      </h1>
-      <div className={styles.grid}>
-        {novelsWithViews.length > 0 ? (
-          novelsWithViews.map((novel) => <WebnovelCard key={novel.id} novel={novel} />)
-        ) : (
-          <p className={styles.empty}>Одоогоор вебньюэл байхгүй байна.</p>
+    <>
+      {settings.heroMediaUrl && settings.heroMediaType && (
+        <div className={styles.heroSection}>
+          {settings.heroMediaType === "video" ? (
+            <video
+              src={settings.heroMediaUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className={styles.heroMedia}
+            />
+          ) : (
+            <img
+              src={settings.heroMediaUrl}
+              alt="Hero"
+              className={styles.heroMedia}
+            />
+          )}
+        </div>
+      )}
+      <div className={styles.container}>
+        {continueReading.length > 0 && <ContinueReading data={continueReading} />}
+        {mostViewedNovels.length > 0 && (
+          <NovelCarousel title="Хамгийн их үзсэн" novels={mostViewedNovels} viewMoreHref="/novels?filter=most-viewed" />
         )}
+        <section id="recommended-novels-section" className={styles.recommendedNovelsSection}>
+          <NovelCarousel title="Санал болгох" novels={novelsWithViews} viewMoreHref="/novels?filter=recommended" />
+        </section>
+        <RecentlyAddedChapters chapters={allRecentChapters} />
       </div>
-      <RecentlyAddedChapters chapters={allRecentChapters} />
-    </div>
+    </>
   );
 }

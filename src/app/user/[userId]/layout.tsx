@@ -29,6 +29,9 @@ interface UserProfile {
   role: string;
   emailVerified: boolean;
   needsPassword: boolean;
+  subscriptionPlan: string | null;
+  subscriptionExpiresAt: string | null;
+  acceptedTermsAt: string | null;
   createdAt: string;
 }
 
@@ -36,6 +39,8 @@ function getActiveTab(pathname: string, userId: string) {
   if (pathname === `/user/${userId}/reviews`) return "reviews";
   if (pathname === `/user/${userId}/comments`) return "comments";
   if (pathname === `/user/${userId}/library`) return "library";
+  if (pathname === `/user/${userId}/history`) return "history";
+  if (pathname === `/user/${userId}/novels` || pathname.startsWith(`/user/${userId}/novels/`)) return "novels";
   return "profile";
 }
 
@@ -53,6 +58,7 @@ function UserLayoutInner({ children }: { children: React.ReactNode }) {
   }
 
   const roleBadge = getRoleBadge(user.role);
+  const isSubscribed = user.subscriptionPlan && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
 
   return (
     <div className={styles.container}>
@@ -76,6 +82,13 @@ function UserLayoutInner({ children }: { children: React.ReactNode }) {
           <div className={styles.userInfo}>
             <h1 className={styles.username}>
               {user.username}
+              {isSubscribed && (
+                <span className={styles.diamondBadge} title={`${user.subscriptionPlan === "simple" ? "Simple" : "Medium"} төлөвлөгөө`}>
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/>
+                  </svg>
+                </span>
+              )}
             </h1>
             <div className={styles.userMeta}>
               <span className={roleBadge.className}>{roleBadge.label}</span>
@@ -87,18 +100,32 @@ function UserLayoutInner({ children }: { children: React.ReactNode }) {
       <nav className={styles.tabsNav}>
         <div className={styles.tabs}>
           <Link href={`/user/${userId}`} className={`${styles.tab} ${activeTab === "profile" ? styles.activeTab : ""}`}>
-            Хэрэглэгчийн мэдээлэл
+            <span className={styles.tabLabelDesktop}>Хэрэглэгчийн мэдээлэл</span>
+            <span className={styles.tabLabelMobile}>Мэдээлэл</span>
           </Link>
           {isOwner && (
-            <Link href={`/user/${userId}/library`} className={`${styles.tab} ${activeTab === "library" ? styles.activeTab : ""}`}>
-              Хадгалсан зохиолууд
-            </Link>
+            <>
+              <Link href={`/user/${userId}/library`} className={`${styles.tab} ${activeTab === "library" ? styles.activeTab : ""}`}>
+                <span className={styles.tabLabelDesktop}>Хадгалсан зохиолууд</span>
+                <span className={styles.tabLabelMobile}>Номын сан</span>
+              </Link>
+              <Link href={`/user/${userId}/history`} className={`${styles.tab} ${activeTab === "history" ? styles.activeTab : ""}`}>
+                <span className={styles.tabLabelDesktop}>Зоосны түүх</span>
+                <span className={styles.tabLabelMobile}>Түүх</span>
+              </Link>
+              <Link href={`/user/${userId}/novels`} className={`${styles.tab} ${activeTab === "novels" ? styles.activeTab : ""}`}>
+                <span className={styles.tabLabelDesktop}>Миний зохиолууд</span>
+                <span className={styles.tabLabelMobile}>Зохиол</span>
+              </Link>
+            </>
           )}
           <Link href={`/user/${userId}/comments`} className={`${styles.tab} ${activeTab === "comments" ? styles.activeTab : ""}`}>
-            Сэтгэгдлүүд
+            <span className={styles.tabLabelDesktop}>Сэтгэгдлүүд</span>
+            <span className={styles.tabLabelMobile}>Сэтгэгдэл</span>
           </Link>
           <Link href={`/user/${userId}/reviews`} className={`${styles.tab} ${activeTab === "reviews" ? styles.activeTab : ""}`}>
-            Үнэлгээнүүд
+            <span className={styles.tabLabelDesktop}>Үнэлгээнүүд</span>
+            <span className={styles.tabLabelMobile}>Үнэлгээ</span>
           </Link>
         </div>
       </nav>

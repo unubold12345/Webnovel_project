@@ -51,91 +51,87 @@ export default async function VolumesPage({
     };
   });
 
+  const totalViews = volumesWithStats.reduce((sum, v) => sum + v.totalViews, 0);
+  const totalChapters = volumesWithStats.reduce((sum, v) => sum + v.chapterCount, 0);
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.titleRow}>
-          <h1 className={styles.title}>{novel.title} - Боть</h1>
+        <div>
+          <h1 className={styles.title}>{novel.title}</h1>
+          <p className={styles.subtitle}>Боть — Нийт {volumesWithStats.length} боть, {totalChapters} бүлэг, {totalViews.toLocaleString()} үзэлт</p>
+        </div>
+        <div className={styles.headerActions}>
           <Link href={`/novels/${novel.slug}`} className={styles.viewButton} target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Харах
           </Link>
+          <Link href={`/admin/novels/${novelId}/volumes/new`} className={styles.addButton}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Боть нэмэх
+          </Link>
         </div>
-        <Link href={`/admin/novels/${novelId}/volumes/new`} className={styles.addButton}>
-          Боть нэмэх
-        </Link>
       </div>
-      <div className={styles.list}>
-        {volumesWithStats.length === 0 ? (
-          <p className={styles.empty}>Одоогоор боть байхгүй.</p>
-        ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Нүүр зураг</th>
-                <th>Гарчиг</th>
-                <th>Бүлгүүд</th>
-                <th>Нийт үзэлт</th>
-                <th>Үйлдэл</th>
-              </tr>
-            </thead>
-            <tbody>
-              {volumesWithStats.map((volume) => (
-                <tr key={volume.id}>
-                  <td data-label="#">{volume.volumeNumber}</td>
-                  <td data-label="Thumbnail">
-                    {volume.thumbnail ? (
-                      <img 
-                        src={volume.thumbnail} 
-                        alt={volume.title}
-                        className={styles.thumbnail}
-                      />
-                    ) : (
-                      <span className={styles.noThumbnail}>Байхгүй</span>
-                    )}
-                  </td>
-                  <td data-label="Title">{volume.title}</td>
-                  <td data-label="Chapters">
-                    {volume.chapterCount > 0 ? (
-                      <span>{volume.chapterCount} бүлэг</span>
-                    ) : (
-                      <span>-</span>
-                    )}
-                  </td>
-                  <td data-label="Total Views">
-                    {volume.totalViews > 0 ? (
-                      <span>{volume.totalViews.toLocaleString()} үзэлт</span>
-                    ) : (
-                      <span>-</span>
-                    )}
-                  </td>
-                  <td data-label="Actions">
-                    <div className={styles.actions}>
-                      <Link
-                        href={`/admin/novels/${novelId}/volumes/${volume.id}/chapters`}
-                        className={styles.chaptersButton}
-                      >
-                        Бүлгүүд
-                      </Link>
-                      <Link
-                        href={`/admin/novels/${novelId}/volumes/${volume.id}/edit`}
-                        className={styles.editButton}
-                      >
-                        Засах
-                      </Link>
-                      <DeleteVolumeButton
-                        novelId={novelId}
-                        volumeId={volume.id}
-                        volumeTitle={volume.title}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+
+      {volumesWithStats.length === 0 ? (
+        <div className={styles.empty}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <p>Одоогоор боть байхгүй.</p>
+          <Link href={`/admin/novels/${novelId}/volumes/new`} className={styles.emptyCta}>Эхний ботийг нэмэх</Link>
+        </div>
+      ) : (
+        <div className={styles.cardGrid}>
+          {volumesWithStats.map((volume) => (
+            <div key={volume.id} className={styles.card}>
+              <div className={styles.cardCover}>
+                {volume.thumbnail ? (
+                  <img src={volume.thumbnail} alt={volume.title} className={styles.coverImage} />
+                ) : (
+                  <div className={styles.coverPlaceholder}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  </div>
+                )}
+                <div className={styles.coverBadge}>#{volume.volumeNumber}</div>
+              </div>
+              <div className={styles.cardBody}>
+                <h3 className={styles.cardTitle}>{volume.title}</h3>
+                <div className={styles.cardStats}>
+                  <div className={styles.cardStat}>
+                    <span className={styles.cardStatValue}>{volume.chapterCount}</span>
+                    <span className={styles.cardStatLabel}>Бүлэг</span>
+                  </div>
+                  <div className={styles.cardStatDivider} />
+                  <div className={styles.cardStat}>
+                    <span className={styles.cardStatValue}>{volume.totalViews.toLocaleString()}</span>
+                    <span className={styles.cardStatLabel}>Үзэлт</span>
+                  </div>
+                </div>
+              </div>
+              <div className={styles.cardActions}>
+                <Link
+                  href={`/admin/novels/${novelId}/volumes/${volume.id}/chapters`}
+                  className={styles.cardActionBtn}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                  Бүлгүүд
+                </Link>
+                <Link
+                  href={`/admin/novels/${novelId}/volumes/${volume.id}/edit`}
+                  className={styles.cardActionBtn}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Засах
+                </Link>
+                <DeleteVolumeButton
+                  novelId={novelId}
+                  volumeId={volume.id}
+                  volumeTitle={volume.title}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import CommentSection from "@/components/ui/CommentSection";
 import ReviewsSection from "@/components/ui/ReviewsSection";
 import NovelDetailsClient from "./NovelDetailsClient";
 import SaveNovelButton from "./SaveNovelButton";
+import { getVolumeRemainingCost } from "@/lib/volume-remaining-cost";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -22,16 +23,19 @@ export default async function NovelDetailsPage({ params }: PageProps) {
   const novel = await db.webnovel.findUnique({
     where: { slug },
     include: {
+      publisher: {
+        select: { id: true, username: true },
+      },
       chapters: {
         orderBy: { chapterNumber: "asc" },
-        select: { id: true, chapterNumber: true, title: true, viewCount: true },
+        select: { id: true, chapterNumber: true, title: true, viewCount: true, isPaid: true, coinCost: true },
       },
       volumes: {
         orderBy: { volumeNumber: "asc" },
         include: {
           chapters: {
             orderBy: { chapterNumber: "asc" },
-            select: { id: true, chapterNumber: true, title: true, viewCount: true },
+            select: { id: true, chapterNumber: true, title: true, viewCount: true, isPaid: true, coinCost: true },
           },
         },
       },
@@ -68,12 +72,48 @@ export default async function NovelDetailsPage({ params }: PageProps) {
   const isAdmin = session?.user?.role === "admin";
   const isModerator = session?.user?.role === "moderator";
 
+  // Fetch unlocked chapters for current user
+  const unlockedChapterIds = session?.user?.id
+    ? await db.unlockedChapter.findMany({
+        where: { userId: session.user.id },
+        select: { chapterId: true, volumeChapterId: true },
+      })
+    : [];
+
+  const unlockedRegular = new Set(unlockedChapterIds.map((u) => u.chapterId).filter((id): id is string => !!id));
+  const unlockedVolume = new Set(unlockedChapterIds.map((u) => u.volumeChapterId).filter((id): id is string => !!id));
+
+  // Fetch unlocked volumes for current user
+  const unlockedVolumeIds = session?.user?.id
+    ? await db.unlockedVolume.findMany({
+        where: { userId: session.user.id },
+        select: { volumeId: true },
+      })
+    : [];
+  const unlockedVolumes = new Set(unlockedVolumeIds.map((u) => u.volumeId));
+
+  // Calculate remaining costs for paid volumes
+  const volumeRemainingCosts: Record<string, number> = {};
+  if (session?.user?.id) {
+    for (const volume of novel.volumes) {
+      if (volume.isPaid) {
+        volumeRemainingCosts[volume.id] = await getVolumeRemainingCost(
+          session.user.id,
+          volume.id,
+          volume.coinCost
+        );
+      }
+    }
+  }
+
   // Format volumes for client (including chapters)
   const clientVolumes = novel.volumes.map((v) => ({
     id: v.id,
     volumeNumber: v.volumeNumber,
     title: v.title,
     thumbnail: v.thumbnail,
+    isPaid: v.isPaid,
+    coinCost: v.coinCost,
     chapters: v.chapters,
   }));
 
@@ -149,6 +189,13 @@ export default async function NovelDetailsPage({ params }: PageProps) {
           {novel.translator && (
             <p className={styles.translator}>Орчуулагч: {novel.translator}</p>
           )}
+          {novel.genres && (
+            <div className={styles.genres}>
+              {novel.genres.split(",").map((g) => g.trim()).filter(Boolean).map((genre, i) => (
+                <span key={i} className={styles.genreBadge}>{genre}</span>
+              ))}
+            </div>
+          )}
           <div className={styles.stats}>
             <div className={styles.stat}>
               <span className={styles.statLabel}>Төлөв</span>
@@ -221,30 +268,32 @@ export default async function NovelDetailsPage({ params }: PageProps) {
                 {totalViews}
               </span>
             </div>
-            <div className={styles.stat}>
-              <span className={styles.statLabel}>Орчуулга</span>
-              {novel.translationStatus === "ongoing" ? (
-                <div className={styles.progressContainer}>
-                  <div className={styles.progressBar}>
-                    <div 
-                      className={styles.progressFill} 
-                      style={{ width: `${translationProgress}%` }}
-                    />
+            {!novel.publisherId && (
+              <div className={styles.stat}>
+                <span className={styles.statLabel}>Орчуулга</span>
+                {novel.translationStatus === "ongoing" ? (
+                  <div className={styles.progressContainer}>
+                    <div className={styles.progressBar}>
+                      <div 
+                        className={styles.progressFill} 
+                        style={{ width: `${translationProgress}%` }}
+                      />
+                    </div>
+                    <span className={styles.progressText}>
+                      {isLightNovel
+                        ? `${uploadedVolumes}/${novel.totalVolumes}`
+                        : `${uploadedChapters}/${novel.totalChapters}${novel.status !== "completed" ? "+" : ""}`}
+                    </span>
                   </div>
-                  <span className={styles.progressText}>
-                    {isLightNovel
-                      ? `${uploadedVolumes}/${novel.totalVolumes}`
-                      : `${uploadedChapters}/${novel.totalChapters}${novel.status !== "completed" ? "+" : ""}`}
+                ) : (
+                  <span
+                    className={`${styles.badge} ${styles.completed}`}
+                  >
+                    {novel.translationStatus}
                   </span>
-                </div>
-              ) : (
-                <span
-                  className={`${styles.badge} ${styles.completed}`}
-                >
-                  {novel.translationStatus}
-                </span>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
           <div className={styles.actions}>
             {isLightNovel && firstVolume && firstVolumeChapter ? (
@@ -287,6 +336,11 @@ export default async function NovelDetailsPage({ params }: PageProps) {
         volumes={clientVolumes}
         isAdmin={isAdmin}
         isModerator={isModerator}
+        unlockedRegular={unlockedRegular}
+        unlockedVolume={unlockedVolume}
+        unlockedVolumes={unlockedVolumes}
+        volumeRemainingCosts={volumeRemainingCosts}
+        isLoggedIn={!!session?.user?.id}
       />
       <ReviewsSection
         novelId={novel.id}

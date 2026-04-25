@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { decode as jwtDecode } from "@auth/core/jwt";
 
-// Public page routes that don't require authentication
 const publicPageRoutes = [
   "/auth/login",
   "/auth/register",
@@ -11,72 +11,161 @@ const publicPageRoutes = [
   "/auth/error",
 ];
 
-// Public API routes that don't require authentication
-const publicApiRoutes = ["/api/auth"];
+const publicApiRoutes = ["/api/auth", "/api/novels", "/api/health"];
 
-export default auth((req) => {
+function addCorsHeaders(response: NextResponse, origin: string | null) {
+  const allowedOrigins = [
+    "http://localhost:8081",
+    "http://192.168.1.5:8081",
+    "http://localhost:19006",
+    "exp://192.168.1.5:8081",
+    "exp://localhost:8081",
+    "capacitor://localhost",
+    "ionic://localhost",
+  ];
+
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set("Access-Control-Allow-Origin", origin);
+    response.headers.set("Access-Control-Allow-Credentials", "true");
+    response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-CSRF-Token");
+  }
+  return response;
+}
+
+// Helper to inject Bearer token as cookie for mobile clients
+async function injectBearerToken(request: NextRequest): Promise<NextRequest> {
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  if (token && !request.cookies.get("authjs.session-token")?.value) {
+    // Verify the token is valid before injecting
+    try {
+      const decoded = await jwtDecode({
+        token,
+        secret: process.env.AUTH_SECRET!,
+        salt: "authjs.session-token",
+      });
+
+      if (decoded?.sub) {
+        // Clone the request and add the cookie
+        const newHeaders = new Headers(request.headers);
+        const cookieHeader = request.headers.get("cookie") || "";
+        const newCookie = cookieHeader
+          ? `${cookieHeader}; authjs.session-token=${token}`
+          : `authjs.session-token=${token}`;
+        newHeaders.set("cookie", newCookie);
+
+        // Create new request with modified headers
+        return new NextRequest(request.url, {
+          method: request.method,
+          headers: newHeaders,
+          body: request.body,
+        });
+      }
+    } catch {
+      // Invalid token, don't inject
+    }
+  }
+
+  return request;
+}
+
+async function handler(req: NextRequest) {
   const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
+  const origin = req.headers.get("origin");
   const pathname = nextUrl.pathname;
-  const userRole = req.auth?.user?.role;
 
-  // Allow all public API routes
+  // Handle CORS preflight requests before auth check
+  if (req.method === "OPTIONS") {
+    const allowedOrigins = [
+      "http://localhost:8081",
+      "http://192.168.1.5:8081",
+      "http://localhost:19006",
+      "exp://192.168.1.5:8081",
+      "exp://localhost:8081",
+      "capacitor://localhost",
+      "ionic://localhost",
+    ];
+
+    const response = new NextResponse(null, { status: 204 });
+    if (origin && allowedOrigins.includes(origin)) {
+      response.headers.set("Access-Control-Allow-Origin", origin);
+      response.headers.set("Access-Control-Allow-Credentials", "true");
+      response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+      response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-CSRF-Token");
+      response.headers.set("Access-Control-Max-Age", "86400");
+    }
+    return response;
+  }
+
   const isPublicApiRoute = publicApiRoutes.some((route) =>
     pathname.startsWith(route)
   );
+
   if (isPublicApiRoute) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    return addCorsHeaders(response, origin);
   }
 
-  // Check if the current page route is public
+  const isLoggedIn = !!(req as any).auth;
+  const userRole = (req as any).auth?.user?.role;
+
   const isPublicPageRoute = publicPageRoutes.some((route) =>
     pathname === route || pathname.startsWith(route + "/")
   );
 
-  // Redirect logged-in users away from auth pages to home
   if (isPublicPageRoute && isLoggedIn) {
     return NextResponse.redirect(new URL("/", nextUrl));
   }
 
-  // Allow access to public page routes for non-logged-in users
   if (isPublicPageRoute) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    return addCorsHeaders(response, origin);
   }
 
-  // For API routes (not public), return 401 if not authenticated
   if (pathname.startsWith("/api")) {
     if (!isLoggedIn) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return addCorsHeaders(response, origin);
     }
-    return NextResponse.next();
+    const response = NextResponse.next();
+    return addCorsHeaders(response, origin);
   }
 
-  // Redirect to login if not authenticated (for page routes)
   if (!isLoggedIn) {
     const loginUrl = new URL("/auth/login", nextUrl);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Role-based access control for /admin routes
   if (pathname.startsWith("/admin")) {
-    if (userRole !== "admin") {
+    if (userRole !== "admin" && userRole !== "moderator") {
       return NextResponse.redirect(new URL("/", nextUrl));
     }
   }
 
-  // Role-based access control for /moderator routes
   if (pathname.startsWith("/moderator")) {
     if (userRole !== "moderator" && userRole !== "admin") {
       return NextResponse.redirect(new URL("/", nextUrl));
     }
   }
 
-  return NextResponse.next();
-});
+  const response = NextResponse.next();
+  return addCorsHeaders(response, origin);
+}
+
+// Create auth-wrapped handler
+const authWrappedHandler = auth(handler);
+
+export default async function proxy(req: NextRequest) {
+  // Inject Bearer token as cookie before auth processing
+  const modifiedReq = await injectBearerToken(req);
+  // Pass to auth-wrapped handler with empty context
+  return authWrappedHandler(modifiedReq, { params: {} } as any);
+}
 
 export const config = {
   matcher: [
-    // Match all routes except static files and _next internal routes
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

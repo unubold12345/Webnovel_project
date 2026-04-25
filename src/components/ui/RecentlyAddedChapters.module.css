@@ -145,6 +145,10 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .card:nth-child(n+11) {
+    display: none;
+  }
+
   .card:hover {
     background: transparent;
   }

@@ -38,11 +38,137 @@
 }
 
 .section {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .section:last-child {
   margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.logoSubSection {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.logoSubSection:last-child {
+  margin-bottom: 0;
+}
+
+.logoSubTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem 0;
+  text-transform: capitalize;
+}
+
+.logoPreview {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.logoPreviewDark {
+  background: #1a1a2e;
+}
+
+.logoPreviewLight {
+  background: #f8f9fa;
+}
+
+.logoImage {
+  object-fit: contain;
+  max-height: 40px;
+  width: auto;
+}
+
+.heroPreview {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.heroPreviewMedia {
+  max-width: 300px;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+}
+
+.logoActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fileInput {
+  display: none;
+}
+
+.uploadButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.uploadButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.uploadButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.removeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.removeButton:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.removeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .sectionTitle {
@@ -98,6 +224,13 @@
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.accessDenied {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
 
 @media (max-width: 768px) {

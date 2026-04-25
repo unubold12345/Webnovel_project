@@ -1,0 +1,613 @@
+.container {
+  max-width: 1400px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.searchForm {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.searchButton {
+  padding: 0.625rem 1.25rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.searchButton:hover {
+  background: var(--primary-hover);
+}
+
+.list {
+  background: var(--surface);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.875rem 1rem;
+  text-align: left;
+}
+
+.table th {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+}
+
+.table td {
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background: var(--surface-hover);
+}
+
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.coinValue {
+  font-weight: 600;
+  color: var(--warning);
+}
+
+.planBadge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.simplePlan {
+  background: #3b82f6;
+  color: white;
+}
+
+.mediumPlan {
+  background: #8b5cf6;
+  color: white;
+}
+
+.noPlan {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.timeLeft {
+  color: #22c55e;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.grantButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.grantButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.grantButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.revokeButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.revokeButton:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.revokeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.empty,
+.loading {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.pageButton {
+  padding: 0.5rem 1rem;
+  background: var(--surface-hover);
+  color: var(--text);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modalTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.modalSubtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.planSelect {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.planOption {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.planOption:hover {
+  border-color: var(--primary);
+}
+
+.planOption input {
+  accent-color: var(--primary);
+}
+
+.planOptionLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.quickAmounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.quickAmountButton {
+  flex: 1;
+  min-width: 60px;
+  padding: 0.5rem;
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quickAmountButton:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.quickAmountButton.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.coinInput {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: var(--background);
+  color: var(--text);
+  margin-bottom: 1.25rem;
+}
+
+.coinInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.modalActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.cancelButton {
+  padding: 0.625rem 1rem;
+  background: var(--surface-hover);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton:hover {
+  background: var(--border);
+}
+
+.confirmButton {
+  padding: 0.625rem 1rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirmButton:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.confirmButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.historyButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: var(--surface-hover);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.historyButton:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.historyButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.historyTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.historyTable th,
+.historyTable td {
+  padding: 0.5rem 0.625rem;
+  text-align: left;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.historyTable th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+}
+
+.actionGranted {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.actionRevoked {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.actionExpired {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .header {
+    margin-bottom: 1rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .searchForm {
+    flex-direction: row;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .searchInput {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .searchButton {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .list {
+    background: transparent;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .table,
+  .table thead,
+  .table tbody,
+  .table th,
+  .table td,
+  .table tr {
+    display: block;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tr {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .table td {
+    border: none;
+    padding: 0.25rem 0;
+    font-size: 0.8125rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+  }
+
+  .table td:first-child {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .table td:first-child::before {
+    display: none;
+  }
+
+  .table td:last-child {
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .table td:last-child::before {
+    display: none;
+  }
+
+  .userCell {
+    gap: 0.5rem;
+  }
+
+  .avatar,
+  .avatarPlaceholder {
+    width: 24px;
+    height: 24px;
+    font-size: 0.6875rem;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .grantButton,
+  .revokeButton,
+  .historyButton {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.6875rem;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .pageButton {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .pageInfo {
+    font-size: 0.75rem;
+    order: -1;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0.25rem;
+  }
+
+  .empty,
+  .loading {
+    padding: 2rem;
+    font-size: 0.8125rem;
+  }
+}

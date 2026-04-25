@@ -6,6 +6,10 @@ declare module "next-auth" {
     id?: string;
     isRestricted?: boolean;
     emailVerified?: boolean;
+    coins?: number;
+    subscriptionPlan?: string | null;
+    subscriptionExpiresAt?: string | null;
+    acceptedTermsAt?: string | null;
   }
 
   interface Session {
@@ -14,6 +18,10 @@ declare module "next-auth" {
       id: string;
       isRestricted: boolean;
       emailVerified: boolean;
+      coins: number;
+      subscriptionPlan: string | null;
+      subscriptionExpiresAt: string | null;
+      acceptedTermsAt: string | null;
     };
   }
 }
@@ -24,5 +32,9 @@ declare module "next-auth/jwt" {
     id?: string;
     isRestricted?: boolean;
     emailVerified?: boolean;
+    coins?: number;
+    subscriptionPlan?: string | null;
+    subscriptionExpiresAt?: string | null;
+    acceptedTermsAt?: string | null;
   }
 }
