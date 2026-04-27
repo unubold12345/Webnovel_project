@@ -1,10 +1,11 @@
 .navbar {
   background: transparent;
   border-bottom: 1px solid transparent;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
-  margin-top: calc(0px - env(safe-area-inset-top));
   min-height: 64px;
   padding-top: env(safe-area-inset-top);
   display: flex;
