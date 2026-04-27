@@ -1,17 +1,14 @@
 .navbar {
-  background: transparent;
-  border-bottom: 1px solid transparent;
-  position: sticky;
-  top: 0;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  position: relative;
   z-index: 100;
-  margin-top: calc(0px - env(safe-area-inset-top));
   min-height: 64px;
   padding-top: env(safe-area-inset-top);
   display: flex;
   align-items: center;
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
-  transition: background 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
 }
 
 .navbarScrolled {
@@ -21,7 +18,7 @@
 }
 
 .navbarHidden {
-  transform: translateY(-100%);
+  display: none;
 }
 
 .container {
