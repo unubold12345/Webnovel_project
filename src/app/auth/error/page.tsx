@@ -29,12 +29,14 @@ export default async function AuthErrorPage({
   const errorMessage = error ? errorMessages[error.toLowerCase()] || errorMessages.default : errorMessages.default;
 
   return (
+    <div className={styles.authWrapper}>
     <div className={styles.form}>
       <h1 className={styles.title}>Баталгаажуулалтын алдаа</h1>
       <p className={styles.error}>{errorMessage}</p>
       <Link href="/auth/login" className={styles.button} style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
         Нэвтрэх хуудас руу буцах
       </Link>
+    </div>
     </div>
   );
 }

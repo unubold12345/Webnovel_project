@@ -1,63 +1,74 @@
 .form {
-  max-width: 360px;
-  margin: 4rem auto;
-  padding: 2rem;
-  border-radius: 16px;
+  max-width: 440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2.5rem;
+  border-radius: 20px;
   background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
   text-align: center;
   letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 .field {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .label {
   display: block;
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
 }
 
 .input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
   font-size: 1rem;
   background: var(--background);
   color: var(--text);
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input:focus {
   outline: none;
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
 }
 
 .button {
   width: 100%;
-  padding: 0.875rem;
+  padding: 1rem;
   background: var(--primary);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   margin-top: 1.5rem;
-  transition: background 0.2s, transform 0.1s;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
 }
 
 .button:hover {
   background: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
 .button:active {
@@ -72,30 +83,35 @@
 .error {
   color: var(--error);
   margin-bottom: 1rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   text-align: center;
+  padding: 0.75rem;
+  background: rgba(220, 38, 38, 0.08);
+  border-radius: 10px;
+  font-weight: 500;
 }
 
 .googleButton {
   width: 100%;
-  padding: 0.875rem;
-  background: white;
-  color: #333;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  padding: 1rem;
+  background: var(--background);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s, border-color 0.2s;
 }
 
 .googleButton:hover {
-  background: #f8f9fa;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--surface-hover);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .googleButton:active {
@@ -130,6 +146,7 @@
 
 .divider span {
   padding: 0 1rem;
+  font-weight: 500;
 }
 
 .resendSection {
@@ -145,6 +162,7 @@
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
+  font-weight: 500;
 }
 
 .resendButton:hover {
@@ -207,16 +225,61 @@
 
 .switch a {
   color: var(--primary);
-  font-weight: 500;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.switch a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* Auth page wrapper */
+.authWrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--background);
 }
 
 @media (max-width: 640px) {
+  .authWrapper {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 3rem;
+  }
+
   .form {
-    margin: 2rem auto;
-    padding: 1.5rem;
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+    box-shadow: none;
+    border: 1px solid var(--border);
   }
 
   .title {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .input {
+    padding: 0.875rem 0.875rem;
+  }
+
+  .button,
+  .googleButton {
+    padding: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .title {
+    font-size: 1.375rem;
   }
 }

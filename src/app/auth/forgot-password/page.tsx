@@ -39,6 +39,7 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
+      <div className={styles.authWrapper}>
       <div className={styles.form}>
         <h1 className={styles.title}>Имэйл илгээгдлээ</h1>
         <div className={styles.successMessage}>
@@ -70,11 +71,13 @@ export default function ForgotPasswordPage() {
             </Link>
           </div>
         </div>
+    </div>
       </div>
-    );
-  }
+  );
+}
 
   return (
+    <div className={styles.authWrapper}>
     <form onSubmit={handleSubmit} className={styles.form}>
       <h1 className={styles.title}>Нууц үг сэргээх</h1>
       {error && <p className={styles.error}>{error}</p>}
@@ -98,5 +101,6 @@ export default function ForgotPasswordPage() {
         Нууц үгээ сэргээсэн үү? <Link href="/auth/login">Нэвтрэх</Link>
       </p>
     </form>
+    </div>
   );
 }
