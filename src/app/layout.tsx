@@ -21,10 +21,6 @@ const dancingScript = Dancing_Script({
 export const metadata: Metadata = {
   title: "Dream Novel",
   description: "Read novels online",
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0f0f13" },
-    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
-  ],
 };
 
 export const viewport: Viewport = {
@@ -32,6 +28,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0f0f13" },
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+  ],
 };
 
 const themeScript = `
