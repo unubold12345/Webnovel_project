@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import styles from "./ConfirmModal.module.css";
 
 interface ConfirmModalProps {
@@ -33,12 +34,10 @@ export default function ConfirmModal({
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+      lockScroll();
     }
     return () => {
-      document.body.style.overflow = "";
+      unlockScroll();
     };
   }, [isOpen]);
 

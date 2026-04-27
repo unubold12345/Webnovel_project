@@ -34,7 +34,7 @@ export default async function HomePage() {
     novel: { id: string; title: string; slug: string; thumbnail: string; novelType: string };
     chapter?: { id: string; chapterNumber: number; title: string } | null;
     volumeChapter?: { id: string; chapterNumber: number; title: string } | null;
-    volume?: { id: string; title: string } | null;
+    volume?: { id: string; title: string; volumeNumber?: number } | null;
     chapterNumber: number;
     isVolumeChapter: boolean;
     volumeId?: string | null;
@@ -55,7 +55,7 @@ export default async function HomePage() {
         volumeChapter: {
           include: {
             volume: {
-              select: { id: true, title: true },
+              select: { id: true, title: true, volumeNumber: true },
             },
           },
         },

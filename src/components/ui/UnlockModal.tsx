@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
 import { dispatchCoinChange } from "@/lib/coinEvents";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import styles from "./UnlockModal.module.css";
 
 interface UnlockModalProps {
@@ -19,6 +21,18 @@ export default function UnlockModal({ title, coinCost, onUnlock, onClose, redire
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [alreadyUnlocked, setAlreadyUnlocked] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    lockScroll();
+    return () => {
+      unlockScroll();
+    };
+  }, []);
 
   const handleUnlock = async () => {
     setLoading(true);
@@ -49,7 +63,9 @@ export default function UnlockModal({ title, coinCost, onUnlock, onClose, redire
 
   const isVolume = !redirectUrl;
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
@@ -118,6 +134,6 @@ export default function UnlockModal({ title, coinCost, onUnlock, onClose, redire
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body
   );
 }

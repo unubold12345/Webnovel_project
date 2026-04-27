@@ -34,11 +34,8 @@ export default function ContinueReading({ data }: ContinueReadingProps) {
   if (!data || data.length === 0) return null;
 
   const getChapterLink = (item: typeof data[0]) => {
-    if (item.isVolumeChapter && item.volumeChapter) {
-      // For volume chapters, we need to construct the URL
-      // Since we don't have volumeNumber in the data, we'll use a different approach
-      // The API should return volume information
-      return `/novels/${item.novel.slug}`;
+    if (item.isVolumeChapter && item.volumeChapter && item.volume?.volumeNumber) {
+      return `/novels/${item.novel.slug}/volumes/${item.volume?.volumeNumber}/chapters/${item.chapterNumber}`;
     }
     return `/novels/${item.novel.slug}/chapters/${item.chapterNumber}`;
   };

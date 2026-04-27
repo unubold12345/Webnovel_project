@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import styles from "./ScheduleChapterModal.module.css";
 
 interface ScheduleChapterModalProps {
@@ -21,6 +23,18 @@ export default function ScheduleChapterModal({
   const [scheduledFor, setScheduledFor] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    lockScroll();
+    return () => {
+      unlockScroll();
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +94,9 @@ export default function ScheduleChapterModal({
     }
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
@@ -144,8 +160,8 @@ export default function ScheduleChapterModal({
               {submitting ? "Товлож байна..." : "Товлох"}
             </button>
           </div>
-        </form>
+      </form>
       </div>
-    </div>
+    </div>, document.body
   );
 }

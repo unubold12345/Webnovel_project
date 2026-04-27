@@ -13,6 +13,7 @@ export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCoinDropdown, setShowCoinDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [renderMobileMenu, setRenderMobileMenu] = useState(false);
   const [avatar, setAvatar] = useState<string | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [mounted, setMounted] = useState(false);
@@ -106,13 +107,23 @@ export default function Navbar() {
       if (!target.closest(`.${styles.coinMenu}`)) {
         setShowCoinDropdown(false);
       }
-      if (!target.closest(`.${styles.mobileMenuWrapper}`)) {
-        setShowMobileMenu(false);
+      if (!target.closest(`.${styles.mobileMenuWrapper}`) && !target.closest(`.${styles.mobileDrawer}`)) {
+        closeMobileMenu();
       }
     };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
+
+  const openMobileMenu = () => {
+    setRenderMobileMenu(true);
+    requestAnimationFrame(() => setShowMobileMenu(true));
+  };
+
+  const closeMobileMenu = () => {
+    setShowMobileMenu(false);
+    setTimeout(() => setRenderMobileMenu(false), 300);
+  };
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -255,7 +266,7 @@ export default function Navbar() {
             <div className={styles.mobileMenuWrapper}>
               <button
                 className={styles.mobileMenuButton}
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                onClick={() => showMobileMenu ? closeMobileMenu() : openMobileMenu()}
                 aria-label="Цэс"
                 aria-expanded={showMobileMenu}
               >
@@ -278,9 +289,11 @@ export default function Navbar() {
       </div>
 
       {/* Mobile side drawer */}
+      {renderMobileMenu && (
+      <>
       <div
         className={`${styles.mobileDrawerBackdrop} ${showMobileMenu ? styles.mobileDrawerBackdropVisible : ""}`}
-        onClick={() => setShowMobileMenu(false)}
+        onClick={closeMobileMenu}
         aria-hidden="true"
       />
       <div className={`${styles.mobileDrawer} ${showMobileMenu ? styles.mobileDrawerOpen : ""}`}>
@@ -290,7 +303,7 @@ export default function Navbar() {
             <Link
               href={panelLink}
               className={styles.mobileDrawerAdminBadge}
-              onClick={() => setShowMobileMenu(false)}
+              onClick={closeMobileMenu}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
               Админ
@@ -298,7 +311,7 @@ export default function Navbar() {
           )}
           <button
             className={styles.mobileDrawerClose}
-            onClick={() => setShowMobileMenu(false)}
+            onClick={closeMobileMenu}
             aria-label="Хаах"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -311,7 +324,7 @@ export default function Navbar() {
           <Link
             href="/novels"
             className={styles.mobileDrawerItem}
-            onClick={() => setShowMobileMenu(false)}
+            onClick={closeMobileMenu}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
             Зохиол
@@ -321,7 +334,7 @@ export default function Navbar() {
               <Link
                 href={`/user/${session.user.id}`}
                 className={styles.mobileDrawerItem}
-                onClick={() => setShowMobileMenu(false)}
+                onClick={closeMobileMenu}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Профайл
@@ -329,7 +342,7 @@ export default function Navbar() {
               <Link
                 href={`/user/${session.user.id}/library`}
                 className={styles.mobileDrawerItem}
-                onClick={() => setShowMobileMenu(false)}
+                onClick={closeMobileMenu}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                 Номын сан
@@ -339,7 +352,7 @@ export default function Navbar() {
           <Link
             href="/recharge"
             className={styles.mobileDrawerItem}
-            onClick={() => setShowMobileMenu(false)}
+            onClick={closeMobileMenu}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             Зоос цэнэглэх
@@ -347,13 +360,15 @@ export default function Navbar() {
           <Link
             href="/subscription"
             className={styles.mobileDrawerItem}
-            onClick={() => setShowMobileMenu(false)}
+            onClick={closeMobileMenu}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             Сарын эрх
           </Link>
         </div>
       </div>
+      </>
+      )}
     </nav>
   );
 }

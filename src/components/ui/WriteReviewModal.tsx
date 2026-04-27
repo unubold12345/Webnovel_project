@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import styles from "./WriteReviewModal.module.css";
 
 interface WriteReviewModalProps {
@@ -22,6 +24,18 @@ export default function WriteReviewModal({
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    lockScroll();
+    return () => {
+      unlockScroll();
+    };
+  }, []);
 
   const charCount = content.length;
 
@@ -62,7 +76,9 @@ export default function WriteReviewModal({
     }
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
@@ -172,6 +188,6 @@ export default function WriteReviewModal({
           {error && <div className={styles.errorMessage}>{error}</div>}
         </form>
       </div>
-    </div>
+    </div>, document.body
   );
 }

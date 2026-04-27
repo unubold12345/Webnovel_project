@@ -1,14 +1,13 @@
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
+  padding: 1rem;
+  overflow-y: auto;
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -27,7 +26,6 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   width: 100%;
   max-width: 480px;
-  margin: 16px;
   animation: slideUp 0.3s ease-out;
   overflow: hidden;
 }
@@ -209,8 +207,8 @@
 
 /* Responsive */
 @media (max-width: 480px) {
-  .modal {
-    margin: 12px;
+  .overlay {
+    padding: 0.75rem;
   }
 
   .footer {

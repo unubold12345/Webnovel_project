@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import styles from "./ReportModal.module.css";
 
 interface ReportModalProps {
@@ -18,6 +20,18 @@ export default function ReportModal({ chapterId, novelSlug, chapterNumber, volum
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    lockScroll();
+    return () => {
+      unlockScroll();
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +68,10 @@ export default function ReportModal({ chapterId, novelSlug, chapterNumber, volum
     }
   };
 
+  if (!mounted) return null;
+
   if (submitted) {
-    return (
+    return createPortal(
       <div className={styles.modalOverlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <div className={styles.successContent}>
@@ -67,8 +83,8 @@ export default function ReportModal({ chapterId, novelSlug, chapterNumber, volum
             <p>Мэдээллийг илгээсэнд баярлалаа. Бид удахгүй үүнийг хянан шийдвэрлэнэ.</p>
             <button onClick={onClose} className={styles.closeButton}>Хаах</button>
           </div>
-        </div>
-      </div>
+          </div>
+        </div>, document.body
     );
   }
 
@@ -76,7 +92,7 @@ export default function ReportModal({ chapterId, novelSlug, chapterNumber, volum
     ? `${volumeNumber}-р боть ${chapterNumber}-р бүлэг мэдээлэх`
     : `${chapterNumber}-р бүлэг мэдээлэх`;
 
-  return (
+  return createPortal(
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
@@ -112,8 +128,8 @@ export default function ReportModal({ chapterId, novelSlug, chapterNumber, volum
               {submitting ? "Илгээж байна..." : "Мэдээлэл илгээх"}
             </button>
           </div>
-        </form>
+      </form>
       </div>
-    </div>
+    </div>, document.body
   );
 }

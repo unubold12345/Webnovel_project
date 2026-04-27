@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import UnlockModal from "./UnlockModal";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import styles from "./ChapterListModal.module.css";
 
 interface Chapter {
@@ -27,6 +29,7 @@ interface ChapterListModalProps {
 
 export default function ChapterListModal({ chapters, currentChapter, novelSlug, volumeNumber, unlockedRegular, unlockedVolume, userId, canManage = false, volumeUnlocked = false }: ChapterListModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [unlockModal, setUnlockModal] = useState<{ title: string; coinCost: number; type: "chapter" | "volumeChapter"; id: string; redirectUrl: string } | null>(null);
   const [justUnlockedIds, setJustUnlockedIds] = useState<Set<string>>(new Set());
@@ -38,13 +41,15 @@ export default function ChapterListModal({ chapters, currentChapter, novelSlug, 
     : "Бүлэгийн жагсаалт";
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+      lockScroll();
     }
     return () => {
-      document.body.style.overflow = "unset";
+      unlockScroll();
     };
   }, [isOpen]);
 
@@ -100,7 +105,7 @@ export default function ChapterListModal({ chapters, currentChapter, novelSlug, 
         {buttonText}
       </button>
 
-      {isOpen && (
+      {isOpen && mounted && createPortal(
         <div className={styles.overlay} onClick={closeModal}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.header}>
@@ -196,7 +201,7 @@ export default function ChapterListModal({ chapters, currentChapter, novelSlug, 
               </div>
             )}
           </div>
-        </div>
+        </div>, document.body
       )}
 
       {unlockModal && (

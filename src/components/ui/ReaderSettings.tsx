@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import styles from "./ReaderSettings.module.css";
 
 type ColorTheme =
@@ -45,14 +47,14 @@ const defaultSettings: ReaderSettings = {
 const STORAGE_KEY = "reader-settings";
 
 // Color theme definitions
-const colorThemes: Record<ColorTheme, { name: string; description: string; bg: string; text: string; accent?: string }> = {
+const colorThemes: Record<ColorTheme, { name: string; description: string; bg: string; text: string; bgLight?: string; textLight?: string; accent?: string }> = {
   default: { name: "Үндсэн", description: "", bg: "", text: "" },
-  "classic-soft-dark": { name: "Классик зөөлөн хар", description: "Нүдний ядралт багасгахад хамгийн тохиромжтой", bg: "#121212", text: "#E0E0E0" },
-  dracula: { name: "Дракула", description: "Өнгөлөг & тод", bg: "#282A36", text: "#F8F8F2" },
-  nord: { name: "Норд", description: "Тайвшруулах & тохиромжтой", bg: "#2E3440", text: "#D8DEE9" },
-  "solarized-dark": { name: "Соларайзд хар", description: "Тэнцвэртэй контраст", bg: "#002B36", text: "#839496" },
-  "midnight-blue": { name: "Шөнийн цэнхэр", description: "Баялаг & гоёмсог", bg: "#001F3F", text: "#E0E0E0" },
-  "royal-road": { name: "Роял Роуд", description: "Урт хугацааны уншлагад зориулсан", bg: "#1a1a1a", text: "#cfcfcf" },
+  "classic-soft-dark": { name: "Классик зөөлөн хар", description: "Нүдний ядралт багасгахад хамгийн тохиромжтой", bg: "#121212", text: "#E0E0E0", bgLight: "#F5F5F5", textLight: "#1A1A1A" },
+  dracula: { name: "Дракула", description: "Өнгөлөг & тод", bg: "#282A36", text: "#F8F8F2", bgLight: "#F8F8F2", textLight: "#282A36" },
+  nord: { name: "Норд", description: "Тайвшруулах & тохиромжтой", bg: "#2E3440", text: "#D8DEE9", bgLight: "#ECEFF4", textLight: "#2E3440" },
+  "solarized-dark": { name: "Соларайзд хар", description: "Тэнцвэртэй контраст", bg: "#002B36", text: "#839496", bgLight: "#FDF6E3", textLight: "#586E75" },
+  "midnight-blue": { name: "Шөнийн цэнхэр", description: "Баялаг & гоёмсог", bg: "#001F3F", text: "#E0E0E0", bgLight: "#E8F0FE", textLight: "#1A2332" },
+  "royal-road": { name: "Роял Роуд", description: "Урт хугацааны уншлагад зориулсан", bg: "#1a1a1a", text: "#cfcfcf", bgLight: "#F4F1EA", textLight: "#2B2B2B" },
 };
 
 // Speed: pixels per second → converted to per-frame (~60fps)
@@ -66,6 +68,7 @@ export default function ReaderSettings() {
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState<ReaderSettings>(defaultSettings);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
   const scrollRafRef = useRef<number>(0);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const autoScrollSpeedRef = useRef(settings.autoScrollSpeed);
@@ -73,6 +76,16 @@ export default function ReaderSettings() {
   const lastManualRef = useRef<number>(0);
 
   autoScrollSpeedRef.current = settings.autoScrollSpeed;
+
+  // Lock body scroll when panel is open (mobile)
+  useEffect(() => {
+    if (isOpen) {
+      lockScroll();
+    }
+    return () => {
+      unlockScroll();
+    };
+  }, [isOpen]);
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -86,6 +99,18 @@ export default function ReaderSettings() {
       }
     }
     setIsHydrated(true);
+  }, []);
+
+  // Track site-level theme changes so Royal Road adapts
+  useEffect(() => {
+    const resolveMode = () => {
+      const attr = document.documentElement.getAttribute("data-theme");
+      setThemeMode(attr === "dark" ? "dark" : "light");
+    };
+    resolveMode();
+    const observer = new MutationObserver(resolveMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
   }, []);
 
   // Save settings to localStorage only after hydration
@@ -107,17 +132,19 @@ export default function ReaderSettings() {
     return Math.max(280, rightSpace);
   }, []);
 
-  // Update panel width when container width changes
+  // Update panel width when container width changes (desktop only)
   useEffect(() => {
     if (!isHydrated || !isOpen) return;
-    
+    // Skip width calculation on mobile — CSS media query handles it
+    if (window.innerWidth <= 640) return;
+
     const updatePanelWidth = () => {
       if (panelRef.current) {
         const width = calculatePanelWidth();
         panelRef.current.style.width = `${width}px`;
       }
     };
-    
+
     updatePanelWidth();
     window.addEventListener('resize', updatePanelWidth);
     return () => window.removeEventListener('resize', updatePanelWidth);
@@ -161,14 +188,16 @@ export default function ReaderSettings() {
 
       // Apply color theme to content
       const theme = colorThemes[settings.colorTheme];
+      const isLight = themeMode === "light";
       if (settings.colorTheme === "default") {
         content.style.backgroundColor = "";
         content.style.color = "";
         content.style.textRendering = "";
       } else {
-        content.style.backgroundColor = theme.bg;
-        content.style.color = theme.text;
-        // Royal Road specific styles - only apply text rendering, font weight is handled per paragraph
+        const bg = isLight && theme.bgLight ? theme.bgLight : theme.bg;
+        const text = isLight && theme.textLight ? theme.textLight : theme.text;
+        content.style.backgroundColor = bg;
+        content.style.color = text;
         if (settings.colorTheme === "royal-road") {
           content.style.textRendering = "optimizeLegibility";
         } else {
@@ -179,15 +208,16 @@ export default function ReaderSettings() {
 
     if (container && container instanceof HTMLElement) {
       container.style.maxWidth = `${settings.containerWidth}px`;
-      // Apply background to container as well for seamless look
       const theme = colorThemes[settings.colorTheme];
       if (settings.colorTheme !== "default") {
-        container.style.backgroundColor = theme.bg;
+        const isLight = themeMode === "light";
+        const bg = isLight && theme.bgLight ? theme.bgLight : theme.bg;
+        container.style.backgroundColor = bg;
       } else {
         container.style.backgroundColor = "";
       }
     }
-  }, [settings, isHydrated]);
+  }, [settings, isHydrated, themeMode]);
 
   // Track user manual scroll input — pause auto-scroll briefly while user is scrolling
   useEffect(() => {
@@ -316,13 +346,14 @@ export default function ReaderSettings() {
         </svg>
       </button>
 
-      {isOpen && (
-        <>
-          <div className={styles.overlay} onClick={() => setIsOpen(false)} />
-          <div
-            ref={panelRef}
-            className={styles.sidePanel}
-          >
+      {isOpen &&
+        createPortal(
+          <>
+            <div className={styles.overlay} onClick={() => setIsOpen(false)} />
+            <div
+              ref={panelRef}
+              className={styles.sidePanel}
+            >
             <div className={styles.header}>
               <h2 className={styles.title}>Уншигчийн тохиргоо</h2>
               <button
@@ -658,8 +689,10 @@ export default function ReaderSettings() {
               </button>
             </div>
           </div>
-        </>
-      )}
+        </>,
+        document.body
+      )
+    }
     </>
   );
 }

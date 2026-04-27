@@ -270,26 +270,12 @@
   color: var(--text);
 }
 
-.mobileDrawerBackdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  z-index: 101;
-}
-
-.mobileDrawerBackdropVisible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 .mobileDrawer {
   position: fixed;
   top: 0;
   right: 0;
   height: 100vh;
+  height: 100dvh;
   width: 75%;
   max-width: 320px;
   background: var(--surface);
@@ -303,6 +289,21 @@
 
 .mobileDrawerOpen {
   transform: translateX(0);
+}
+
+.mobileDrawerBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 101;
+}
+
+.mobileDrawerBackdropVisible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .mobileDrawerHeader {
