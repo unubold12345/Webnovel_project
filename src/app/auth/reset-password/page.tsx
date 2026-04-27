@@ -59,7 +59,6 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className={styles.authWrapper}>
       <div className={styles.form}>
         <h1 className={styles.title}>Амжилттай!</h1>
         <div className={styles.successMessage}>
@@ -70,13 +69,11 @@ export default function ResetPasswordPage() {
             </Link>
           </div>
         </div>
-    </div>
       </div>
-  );
-}
+    );
+  }
 
   return (
-    <div className={styles.authWrapper}>
     <form onSubmit={handleSubmit} className={styles.form}>
       <h1 className={styles.title}>Шинэ нууц үг тохируулах</h1>
       {error && <p className={styles.error}>{error}</p>}
@@ -109,6 +106,5 @@ export default function ResetPasswordPage() {
         <Link href="/auth/login">Нэвтрэх хуудас руу буцах</Link>
       </p>
     </form>
-    </div>
   );
 }
