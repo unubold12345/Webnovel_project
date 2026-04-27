@@ -247,22 +247,18 @@ export default function Navbar() {
               </div>
             </div>
           ) : (
-            <>
-              <Link href="/auth/login" className={styles.navLink}>
-                Нэвтрэх
-              </Link>
-              <Link href="/auth/register" className={styles.navLink}>
-                Бүртгүүлэх
-              </Link>
-            </>
+            <Link href="/auth/login" className={styles.navLink}>
+              Нэвтрэх
+            </Link>
           )}
-          <div className={styles.mobileMenuWrapper}>
-            <button
-              className={styles.mobileMenuButton}
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              aria-label="Цэс"
-              aria-expanded={showMobileMenu}
-            >
+          {session && (
+            <div className={styles.mobileMenuWrapper}>
+              <button
+                className={styles.mobileMenuButton}
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                aria-label="Цэс"
+                aria-expanded={showMobileMenu}
+              >
               {showMobileMenu ? (
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"/>
@@ -275,8 +271,9 @@ export default function Navbar() {
                   <line x1="3" y1="18" x2="21" y2="18"/>
                 </svg>
               )}
-            </button>
-          </div>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

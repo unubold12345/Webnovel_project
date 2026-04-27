@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { decode as jwtDecode } from "@auth/core/jwt";
 
 const publicPageRoutes = [
+  "/",
+  "/novels",
   "/auth/login",
   "/auth/register",
   "/auth/forgot-password",
@@ -11,7 +13,16 @@ const publicPageRoutes = [
   "/auth/error",
 ];
 
-const publicApiRoutes = ["/api/auth", "/api/novels", "/api/health"];
+const authOnlyPageRoutes = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/verify-email",
+  "/auth/error",
+];
+
+const publicApiRoutes = ["/api/auth", "/api/novels", "/api/health", "/api/dev/logo"];
 
 function addCorsHeaders(response: NextResponse, origin: string | null) {
   const allowedOrigins = [
@@ -111,11 +122,20 @@ async function handler(req: NextRequest) {
   const isLoggedIn = !!(req as any).auth;
   const userRole = (req as any).auth?.user?.role;
 
-  const isPublicPageRoute = publicPageRoutes.some((route) =>
+  const isPublicPageRoute = publicPageRoutes.some((route) => {
+    if (pathname === route) return true;
+    if (route === "/novels") {
+      // Allow /novels and /novels/{slug} but not /novels/{slug}/chapters/...
+      return /^\/novels\/[^/]+$/.test(pathname);
+    }
+    return pathname.startsWith(route + "/");
+  });
+
+  const isAuthOnlyPageRoute = authOnlyPageRoutes.some((route) =>
     pathname === route || pathname.startsWith(route + "/")
   );
 
-  if (isPublicPageRoute && isLoggedIn) {
+  if (isAuthOnlyPageRoute && isLoggedIn) {
     return NextResponse.redirect(new URL("/", nextUrl));
   }
 
