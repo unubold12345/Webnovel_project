@@ -21,6 +21,7 @@ export default function Navbar() {
   const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(null);
   const [logoLightUrl, setLogoLightUrl] = useState<string | null>(null);
   const [navbarHidden, setNavbarHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const lastKnownCoins = useRef<number | null>(null);
   const lastScrollY = useRef(0);
   const renderMobileMenuRef = useRef(false);
@@ -105,6 +106,7 @@ export default function Navbar() {
       const currentY = window.scrollY;
       const delta = currentY - lastScrollY.current;
       lastScrollY.current = currentY;
+      setScrolled(currentY > 10);
       if (currentY < 64) {
         setNavbarHidden(false);
       } else if (delta > 5) {
@@ -162,7 +164,7 @@ export default function Navbar() {
   const panelLink = getPanelLink();
 
   return (
-    <nav className={`${styles.navbar} ${navbarHidden ? styles.navbarHidden : ""}`}>
+    <nav className={`${styles.navbar} ${navbarHidden ? styles.navbarHidden : ""} ${scrolled ? styles.navbarScrolled : ""}`}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
           {(() => {
