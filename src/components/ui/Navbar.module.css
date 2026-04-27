@@ -8,6 +8,8 @@
   height: 64px;
   display: flex;
   align-items: center;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .container {
