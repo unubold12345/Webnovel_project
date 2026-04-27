@@ -20,7 +20,10 @@ export default function Navbar() {
   const [coinFloat, setCoinFloat] = useState<{ amount: number; id: number } | null>(null);
   const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(null);
   const [logoLightUrl, setLogoLightUrl] = useState<string | null>(null);
+  const [navbarHidden, setNavbarHidden] = useState(false);
   const lastKnownCoins = useRef<number | null>(null);
+  const lastScrollY = useRef(0);
+  const renderMobileMenuRef = useRef(false);
   const username = session?.user?.name || session?.user?.email || "Хэрэглэгч";
 
   useEffect(() => {
@@ -96,7 +99,23 @@ export default function Navbar() {
     }
   }, [session?.user?.isRestricted]);
 
-
+  useEffect(() => {
+    const handleScroll = () => {
+      if (renderMobileMenuRef.current) return;
+      const currentY = window.scrollY;
+      const delta = currentY - lastScrollY.current;
+      lastScrollY.current = currentY;
+      if (currentY < 64) {
+        setNavbarHidden(false);
+      } else if (delta > 5) {
+        setNavbarHidden(true);
+      } else if (delta < -5) {
+        setNavbarHidden(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -117,11 +136,13 @@ export default function Navbar() {
 
   const openMobileMenu = () => {
     setRenderMobileMenu(true);
+    renderMobileMenuRef.current = true;
     requestAnimationFrame(() => setShowMobileMenu(true));
   };
 
   const closeMobileMenu = () => {
     setShowMobileMenu(false);
+    renderMobileMenuRef.current = false;
     setTimeout(() => setRenderMobileMenu(false), 300);
   };
 
@@ -141,7 +162,7 @@ export default function Navbar() {
   const panelLink = getPanelLink();
 
   return (
-    <nav className={styles.navbar}>
+    <nav className={`${styles.navbar} ${navbarHidden ? styles.navbarHidden : ""}`}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
           {(() => {
