@@ -1175,7 +1175,7 @@ export default function CommentSection({ novelId, chapterId, volumeId }: Comment
           </div>
         ))}
         {comments.length === 0 && !loading && (
-          <p className={styles.empty}>No comments yet</p>
+           <p className={styles.empty}>Сэтгэгдэл байхгүй байна.</p>
         )}
         {loading && (
           <p className={styles.loading}>Loading comments...</p>

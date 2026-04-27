@@ -215,16 +215,16 @@ export default function LibraryPage() {
                               {item.readingProgress.volumeTitle}
                             </Link>
                             <span className={libraryStyles.chapterNumber}>
-                              Chapter {item.readingProgress.chapterNumber}
-                            </span>
+                               Бүлэг {item.readingProgress.chapterNumber}
+                             </span>
                           </>
                         ) : (
                           <Link
                             href={`/novels/${item.slug}/chapters/${item.readingProgress.chapterNumber}`}
                             className={libraryStyles.chapterLink}
                           >
-                            Chapter {item.readingProgress.chapterNumber}
-                            {item.readingProgress.chapterTitle
+                             Бүлэг {item.readingProgress.chapterNumber}
+                             {item.readingProgress.chapterTitle
                               ? ` - ${item.readingProgress.chapterTitle}`
                               : ""}
                           </Link>

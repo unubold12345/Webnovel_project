@@ -305,7 +305,7 @@ export async function POST(req: NextRequest) {
           data: {
             userId: parentComment.userId,
             type: "comment_reply",
-            message: `${replier?.username || "Someone"} replied to your comment`,
+            message: `${replier?.username || "Хэн нэгэн"} таны сэтгэгдэлд хариу бичлээ`,
             link,
           },
         });

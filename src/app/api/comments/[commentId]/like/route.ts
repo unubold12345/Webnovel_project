@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
               data: {
                 userId: comment.userId,
                 type: "comment_like",
-                message: `${liker?.username || "Someone"} liked your comment`,
+                message: `${liker?.username || "Хэн нэгэн"} таны сэтгэгдэлд like дарлаа`,
                 link,
               },
             });

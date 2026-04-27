@@ -78,7 +78,7 @@ export default function CoinHistoryPage() {
       {loading ? (
         <div className={styles.loading}>Ачааллаж байна...</div>
       ) : history.length === 0 ? (
-        <div className={styles.empty}>Одоогоор зоосны түүх байхгүй.</div>
+         <div className={styles.empty}>Зоосны түүх байхгүй байна.</div>
       ) : (
         <>
           <div className={styles.tableWrapper}>

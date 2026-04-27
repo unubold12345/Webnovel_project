@@ -61,6 +61,9 @@ export default function NotificationDropdown() {
           );
           newNotifications.forEach((n) => {
             seenIdsRef.current.add(n.id);
+            if (n.type === "comment_like" || n.type === "comment_reply") {
+              return;
+            }
             if (n.type === "topup") {
               addToast(n.message, "success", 6000);
             } else if (n.type === "subscription_expired") {

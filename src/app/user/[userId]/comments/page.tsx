@@ -86,7 +86,7 @@ export default function CommentsPage() {
     <div className={styles.contentSection}>
       <h2 className={styles.sectionTitle}>Сэтгэгдлүүд ({totalCount})</h2>
       {comments.length === 0 ? (
-        <p className={styles.empty}>Сэтгэгдэл байхгүй</p>
+         <p className={styles.empty}>Сэтгэгдэл байхгүй байна.</p>
       ) : (
         <>
           <div className={styles.commentsList}>
