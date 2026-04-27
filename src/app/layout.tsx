@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto_Condensed, Dancing_Script } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/ui/Navbar";
-import Footer from "@/components/ui/Footer";
 import Providers from "@/components/ui/Providers";
-import GlobalToast from "@/components/ui/GlobalToast";
+import LayoutShell from "@/components/ui/LayoutShell";
 
 const robotoCondensed = Roboto_Condensed({
   subsets: ["latin", "cyrillic"],
@@ -52,22 +50,11 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={robotoCondensed.className}>
-        <Providers>
-          <GlobalToast />
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              minHeight: "100vh",
-            }}
-          >
-            <Navbar />
-            <main style={{ flex: 1 }}>{children}</main>
-            <Footer />
-          </div>
-        </Providers>
-      </body>
+      <Providers>
+        <LayoutShell className={robotoCondensed.className}>
+          {children}
+        </LayoutShell>
+      </Providers>
     </html>
   );
 }
