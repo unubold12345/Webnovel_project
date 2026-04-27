@@ -138,7 +138,7 @@ export default function Navbar() {
             if (url) {
               return (
                 <>
-                  <Image src={url} alt="Site logo" width={120} height={36} className={styles.logoImage} />
+                  <Image src={url} alt="Site logo" width={120} height={36} className={styles.logoImage} priority unoptimized />
                   <span className={styles.logoText}>Dream Novel</span>
                 </>
               );
