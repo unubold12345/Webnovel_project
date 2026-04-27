@@ -22,7 +22,7 @@ export default function LayoutShell({
         }}
       >
         <Navbar />
-        <main style={{ flex: 1 }}>{children}</main>
+        <main style={{ flex: 1, paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>{children}</main>
         <Footer />
       </div>
     </body>
